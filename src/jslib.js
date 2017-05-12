@@ -62,14 +62,13 @@ const push = function(L, v) {
 			v(L);
 			break;
 		}
-		/* fall through */
-	default:
 		if (v === null) {
 			/* can't use null in a WeakMap; grab from registry */
 			lua.lua_rawgetp(L, lua.LUA_REGISTRYINDEX, null);
 			break;
 		}
-
+		/* fall through */
+	default:
 		/* Try and push same object again */
 		let objects_seen = states.get(getmainthread(L));
 		let p = objects_seen.get(v);
