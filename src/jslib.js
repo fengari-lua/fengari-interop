@@ -12,6 +12,14 @@ const bind = (function(){}).bind;
 
 const js_tname = lua.to_luastring("js object");
 
+const testjs = function(L, idx) {
+	let u = lauxlib.luaL_testudata(L, idx, js_tname);
+	if (u)
+		return u.data;
+	else
+		return void 0;
+};
+
 const checkjs = function(L, idx) {
 	return lauxlib.luaL_checkudata(L, idx, js_tname).data;
 };
@@ -88,9 +96,13 @@ const tojs = function(L, idx) {
 		return lua.lua_tonumber(L, idx);
 	case lua.LUA_TSTRING:
 		return lua.lua_tojsstring(L, idx);
+	case lua.LUA_TUSERDATA:
+		let u = testjs(L, idx);
+		if (u !== void 0)
+			return u;
+		/* fall through */
 	case lua.LUA_TTABLE:
 	case lua.LUA_TFUNCTION:
-	case lua.LUA_TUSERDATA:
 	case lua.LUA_TTHREAD:
 		/* fall through */
 	default:
