@@ -1,0 +1,27 @@
+{
+	"name": "fengari-interop",
+	"version": "0.0.1",
+	"description": "JS library for Fengari",
+	"author": "Daurnimator <quae@daurnimator.com>",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/daurnimator/fengari-interop.git"
+	},
+	"license": "MIT",
+	"keywords": [
+		"lua",
+		"fengari",
+		"language"
+	],
+	"bugs": {
+		"url": "https://github.com/daurnimator/fengari-interop/issues"
+	},
+	"homepage": "https://github.com/daurnimator/fengari-interop",
+	"dependencies": {
+		"fengari": "0.0.1"
+	},
+	"main": "src/jslib.js",
+	"directories": {
+		"lib": "src"
+	}
+}
