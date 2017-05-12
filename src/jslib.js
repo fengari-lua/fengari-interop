@@ -57,11 +57,13 @@ const push = function(L, v) {
 	case "symbol":
 		lua.lua_pushlightuserdata(L, v);
 		break;
-	case "object":
+	case "function":
 		if (lua.lua_isproxy(v, L)) {
 			v(L);
 			break;
 		}
+		/* fall through */
+	case "object":
 		if (v === null) {
 			/* can't use null in a WeakMap; grab from registry */
 			lua.lua_rawgetp(L, lua.LUA_REGISTRYINDEX, null);
