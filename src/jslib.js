@@ -253,10 +253,7 @@ const wrap = function(L, p) {
 		return has(L, p, k);
 	};
 	js_proxy.set = function(k, v) {
-		if (v == void 0)
-			return deleteProperty(L, p, k);
-		else
-			return set(L, p, k, v);
+		return set(L, p, k, v);
 	};
 	js_proxy.delete = function(k) {
 		return deleteProperty(L, p, k);
