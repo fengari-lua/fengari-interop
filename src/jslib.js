@@ -264,10 +264,10 @@ const wrap = function(L, p) {
 	js_proxy.toString = function() {
 		return tostring(L, p);
 	};
+	js_proxy[Symbol.toStringTag] = "Fengari object";
 	js_proxy[Symbol.iterator] = function() {
 		return jsiterator(L, p);
 	};
-	js_proxy[Symbol.toStringTag] = js_proxy.toString;
 	/* for node */
 	js_proxy[util.inspect.custom] = js_proxy.toString;
 	return js_proxy;
