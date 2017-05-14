@@ -10,6 +10,10 @@ const lualib  = fengari.lualib;
 const apply = (function(){}).apply;
 const bind = (function(){}).bind;
 
+const isobject = function(o) {
+	return typeof o === "object" ? o !== null : typeof o === "function";
+};
+
 const js_tname = lua.to_luastring("js object");
 
 const testjs = function(L, idx) {
@@ -269,6 +273,28 @@ const wrap = function(L, p) {
 	return js_proxy;
 };
 
+const get_iterator = function(L, idx) {
+	let u = checkjs(L, idx);
+	let getiter = u[Symbol.iterator];
+	if (!getiter)
+		lauxlib.luaL_argerror(L, idx, lua.to_luastring("object not iterable"));
+	let iter = bind.call(getiter, u)();
+	if (!isobject(iter))
+		lauxlib.luaL_argerror(L, idx, lua.to_luastring("Result of the Symbol.iterator method is not an object"));
+	return iter;
+};
+
+const next = function(L) {
+	let iter = checkjs(L, 1);
+	let r = iter.next();
+	if (r.done) {
+		return 0;
+	} else {
+		push(L, r.value);
+		return 1;
+	}
+};
+
 let jslib = {
 	"new": function(L) {
 		let u = checkjs(L, 1);
@@ -280,6 +306,12 @@ let jslib = {
 		}
 		push(L, new (bind.apply(u, args))());
 		return 1;
+	},
+	"of": function(L) {
+		let iter = get_iterator(L, 1);
+		lua.lua_pushcfunction(L, next);
+		push(L, iter);
+		return 2;
 	}
 };
 
