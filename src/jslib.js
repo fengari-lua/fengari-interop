@@ -270,6 +270,33 @@ const wrap = function(L, p) {
 	return js_proxy;
 };
 
+const proxy_handlers = {
+	apply: function(target, thisarg, args) {
+		return invoke(target.L, target.p, thisarg, args, 1)[0];
+	},
+	get: function(target, k) {
+		return get(target.L, target.p, k);
+	},
+	has: function(target, k) {
+		return has(target.L, target.p, k);
+	},
+	set: function(target, k, v) {
+		return set(target.L, target.p, k, v);
+	},
+	deleteProperty: function(target, k) {
+		return deleteProperty(target.L, target.p, k);
+	}
+};
+
+const createproxy = function(L, p) {
+	/* we need `typeof js_proxy` to be "function" so that it's acceptable to native apis */
+	let target = function(){ return p(L); }
+	target.p = p;
+	target.L = L;
+	let js_proxy = new Proxy(target, proxy_handlers);
+	return js_proxy;
+};
+
 const get_iterator = function(L, idx) {
 	let u = checkjs(L, idx);
 	let getiter = u[Symbol.iterator];
@@ -308,6 +335,12 @@ let jslib = {
 		lua.lua_pushcfunction(L, next);
 		push(L, iter);
 		return 2;
+	},
+	"createproxy": function(L) {
+		lauxlib.luaL_checkany(L, 1);
+		let proxy = createproxy(getmainthread(L), lua.lua_toproxy(L, 1));
+		push(L, proxy);
+		return 1;
 	}
 };
 
