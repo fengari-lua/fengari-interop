@@ -330,7 +330,8 @@ let jsmt = {
 	},
 	__tostring: function(L) {
 		let u = checkjs(L, 1);
-		lua.lua_pushliteral(L, util.inspect(u));
+		let s = util.inspect(u);
+		lua.lua_pushstring(L, lua.to_luastring(s));
 		return 1;
 	},
 	__call: function(L) {
