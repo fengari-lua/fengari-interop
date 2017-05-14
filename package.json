@@ -5,7 +5,7 @@
 	"author": "Daurnimator <quae@daurnimator.com>",
 	"repository": {
 		"type": "git",
-		"url": "git+https://github.com/daurnimator/fengari-interop.git"
+		"url": "git+https://github.com/fengari-lua/fengari-interop.git"
 	},
 	"license": "MIT",
 	"keywords": [
@@ -14,9 +14,9 @@
 		"language"
 	],
 	"bugs": {
-		"url": "https://github.com/daurnimator/fengari-interop/issues"
+		"url": "https://github.com/fengari-lua/fengari-interop/issues"
 	},
-	"homepage": "https://github.com/daurnimator/fengari-interop",
+	"homepage": "https://github.com/fengari-lua/fengari-interop",
 	"dependencies": {
 		"fengari": "0.0.1"
 	},
