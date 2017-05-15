@@ -44,6 +44,12 @@ const getmainthread = function(L) {
 /* weak map from states to proxy objects (for each object) in that state */
 const states = new WeakMap();
 
+const atnativeerror = function(L) {
+	let u = lua.lua_touserdata(L, 1);
+	push(L, u);
+	return 1;
+};
+
 const push = function(L, v) {
 	switch (typeof v) {
 	case "undefined":
@@ -389,6 +395,8 @@ let jsmt = {
 const luaopen_js = function(L) {
 	/* Add weak map to track objects seen */
 	states.set(getmainthread(L), new WeakMap());
+
+	lua.lua_atnativeerror(L, atnativeerror);
 
 	lauxlib.luaL_newlib(L, jslib);
 
