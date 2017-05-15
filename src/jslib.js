@@ -291,7 +291,7 @@ const proxy_handlers = {
 const createproxy = function(L, p) {
 	/* target should be a function so that `typeof proxy` is "function"
 	 * we want `typeof js_proxy` to be "function" so that it's acceptable to native apis */
-	let target = function(){ return p(L); }
+	let target = function(){ return p(L); };
 	target.p = p;
 	target.L = L;
 	let js_proxy = new Proxy(target, proxy_handlers);
