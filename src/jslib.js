@@ -1,11 +1,14 @@
 "use strict";
 
-const util = require('util');
-
 const fengari = require('fengari');
 const lua     = fengari.lua;
 const lauxlib = fengari.lauxlib;
 const lualib  = fengari.lualib;
+
+let custom_inspect_symbol;
+try { /* for node.js */
+	custom_inspect_symbol = require('util').inspect.custom;
+} catch (e) {}
 
 const apply = Reflect.apply;
 const construct = Reflect.construct;
@@ -271,8 +274,9 @@ const wrap = function(L, p) {
 	js_proxy[Symbol.iterator] = function() {
 		return jsiterator(L, p);
 	};
-	/* for node */
-	js_proxy[util.inspect.custom] = js_proxy.toString;
+	if (custom_inspect_symbol) {
+		js_proxy[custom_inspect_symbol] = js_proxy.toString;
+	}
 	return js_proxy;
 };
 
