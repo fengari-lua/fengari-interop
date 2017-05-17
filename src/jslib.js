@@ -417,6 +417,7 @@ const luaopen_js = function(L) {
 };
 
 module.exports.checkjs = checkjs;
+module.exports.testjs = testjs;
 module.exports.pushjs = pushjs;
 module.exports.push = push;
 module.exports.tojs = tojs;
