@@ -370,7 +370,7 @@ let jsmt = {
 	},
 	__tostring: function(L) {
 		let u = checkjs(L, 1);
-		let s = util.inspect(u);
+		let s = apply(Object.prototype.toString, u, []);
 		lua.lua_pushstring(L, lua.to_luastring(s));
 		return 1;
 	},
