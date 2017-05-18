@@ -13,6 +13,11 @@ try { /* for node.js */
 const apply = Reflect.apply;
 const construct = Reflect.construct;
 
+const Object_toString = Object.prototype.toString;
+const toString = function(o) {
+	return apply(Object_toString, o, []);
+};
+
 const isobject = function(o) {
 	return typeof o === "object" ? o !== null : typeof o === "function";
 };
@@ -374,7 +379,7 @@ let jsmt = {
 	},
 	__tostring: function(L) {
 		let u = checkjs(L, 1);
-		let s = apply(Object.prototype.toString, u, []);
+		let s = toString(u);
 		lua.lua_pushstring(L, lua.to_luastring(s));
 		return 1;
 	},
