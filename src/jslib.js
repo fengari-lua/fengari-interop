@@ -13,9 +13,8 @@ try { /* for node.js */
 const apply = Reflect.apply;
 const construct = Reflect.construct;
 
-const Object_toString = Object.prototype.toString;
 const toString = function(o) {
-	return apply(Object_toString, o, []);
+	return ""+o;
 };
 
 const isobject = function(o) {
