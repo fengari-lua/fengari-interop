@@ -357,6 +357,11 @@ let jslib = {
 		let proxy = createproxy(getmainthread(L), lua.lua_toproxy(L, 1));
 		push(L, proxy);
 		return 1;
+	},
+	"tonumber": function(L) {
+		let u = checkjs(L, 1);
+		lua.lua_pushnumber(L, +u);
+		return 1;
 	}
 };
 
