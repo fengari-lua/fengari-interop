@@ -278,6 +278,13 @@ const wrap = function(L, p) {
 	js_proxy[Symbol.iterator] = function() {
 		return jsiterator(L, p);
 	};
+	if (Symbol.toPrimitive) {
+		js_proxy[Symbol.toPrimitive] = function(hint) {
+			if (hint === "string") {
+				return tostring(L, p);
+			}
+		};
+	}
 	if (custom_inspect_symbol) {
 		js_proxy[custom_inspect_symbol] = js_proxy.toString;
 	}
