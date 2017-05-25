@@ -382,7 +382,7 @@ let jsmt = {
 		let u = checkjs(L, 1);
 		let k = tojs(L, 2);
 		let v = tojs(L, 3);
-		if (v == void 0)
+		if (v === void 0)
 			delete u[k];
 		else
 			u[k] = v;
