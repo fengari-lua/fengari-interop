@@ -368,6 +368,12 @@ let jslib = {
 		let u = checkjs(L, 1);
 		lua.lua_pushnumber(L, +u);
 		return 1;
+	},
+	"instanceof": function(L) {
+		let u1 = tojs(L, 1);
+		let u2 = tojs(L, 2);
+		lua.lua_pushboolean(L, u1 instanceof u2);
+		return 1;
 	}
 };
 
