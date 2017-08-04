@@ -331,7 +331,7 @@ const get_iterator = function(L, idx) {
 };
 
 const next = function(L) {
-	let iter = checkjs(L, 1);
+	let iter = tojs(L, 1);
 	let r = iter.next();
 	if (r.done) {
 		return 0;
@@ -343,7 +343,7 @@ const next = function(L) {
 
 let jslib = {
 	"new": function(L) {
-		let u = checkjs(L, 1);
+		let u = tojs(L, 1);
 		let nargs = lua.lua_gettop(L)-1;
 		let args = new Array(nargs);
 		for (let i = 0; i < nargs; i++) {
@@ -365,7 +365,7 @@ let jslib = {
 		return 1;
 	},
 	"tonumber": function(L) {
-		let u = checkjs(L, 1);
+		let u = tojs(L, 1);
 		lua.lua_pushnumber(L, +u);
 		return 1;
 	},
