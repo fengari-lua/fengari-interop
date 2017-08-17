@@ -415,7 +415,55 @@ let jsmt = {
 		}
 		push(L, apply(u, thisarg, args));
 		return 1;
+	},
+	__pairs: function(L) {
+		let u = checkjs(L, 1);
+		let f = u[Symbol.for("__pairs")];
+		if (f === void 0)
+			lauxlib.luaL_argerror(L, 1, lua.to_luastring("no __pairs Symbol"));
+		let r = f.call(u);
+		if (r === void 0)
+			lauxlib.luaL_error(L, lua.to_luastring("bad '__pairs' result (object with keys 'iter', 'state', 'first' expected)"));
+		let iter = r.iter;
+		if (iter === void 0)
+			lauxlib.luaL_error(L, lua.to_luastring("bad '__pairs' result (object.iter is missing)"));
+		lua.lua_pushcfunction(L, function() {
+			let state = tojs(L, 1);
+			let last = tojs(L, 2);
+			let r = iter.call(state, last);
+			/* returning undefined indicates end of iteration */
+			if (r === void 0)
+				return 0;
+			/* otherwise it should return an array of results */
+			if (!Array.isArray(r))
+				lauxlib.luaL_error(L, lua.to_luastring("bad iterator result (Array or undefined expected)"));
+			lauxlib.luaL_checkstack(L, r.length);
+			for (let i=0; i<r.length; i++) {
+				push(L, r[i]);
+			}
+			return r.length;
+		});
+		push(L, r.state);
+		push(L, r.first);
+		return 3;
 	}
+};
+
+/* Create __pairs for all objects that inherit from Object */
+Object.prototype[Symbol.for("__pairs")] = function() {
+	return {
+		iter: function(last) {
+			if (this.index >= this.keys.length)
+				return;
+			let key = this.keys[this.index++];
+			return [key, this.object[key]];
+		},
+		state: {
+			object: this,
+			keys: Object.keys(this),
+			index: 0,
+		}
+	};
 };
 
 const luaopen_js = function(L) {
