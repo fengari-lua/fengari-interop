@@ -25,6 +25,7 @@
 		"lib": "src"
 	},
 	"devDependencies": {
+		"fengari-node-cli": "fengari-lua/fengari-node-cli",
 		"babili-webpack-plugin": "^0.1.2",
 		"webpack": "^3.5.5"
 	},
