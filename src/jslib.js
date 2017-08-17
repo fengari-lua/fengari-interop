@@ -436,7 +436,11 @@ const luaopen_js = function(L) {
 	lua.lua_rawsetp(L, lua.LUA_REGISTRYINDEX, null);
 	lua.lua_setfield(L, -2, lua.to_luastring("null"));
 
-	push(L, global);
+	if (WEB) {
+		push(L, window);
+	} else {
+		push(L, global);
+	}
 	lua.lua_setfield(L, -2, lua.to_luastring("global"));
 
 	return 1;

@@ -15,6 +15,9 @@ module.exports = [
 			"fengari": "fengari"
 		},
 		plugins: [
+			new webpack.DefinePlugin({
+				WEB: JSON.stringify(true),
+			})
 		]
 	},
 	{
@@ -30,6 +33,9 @@ module.exports = [
 			"fengari": "fengari"
 		},
 		plugins: [
+			new webpack.DefinePlugin({
+				WEB: JSON.stringify(true),
+			}),
 			new BabiliPlugin()
 		]
 	}
