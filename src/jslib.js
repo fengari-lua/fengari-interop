@@ -130,7 +130,7 @@ const tojs = function(L, idx) {
 	case lua.LUA_TTHREAD:
 		/* fall through */
 	default:
-		return wrap(getmainthread(L), lua.lua_toproxy(L, idx));
+		return wrap(L, lua.lua_toproxy(L, idx));
 	}
 };
 
@@ -254,7 +254,8 @@ const jsiterator = function(L, p) {
 
 const known_proxys = new WeakMap();
 
-const wrap = function(L, p) {
+const wrap = function(L1, p) {
+	const L = getmainthread(L1);
 	/* we need `typeof js_proxy` to be "function" so that it's acceptable to native apis */
 	let js_proxy = function() {
 		/* only get one result */
@@ -318,7 +319,8 @@ const proxy_handlers = {
 	}
 };
 
-const createproxy = function(L, p) {
+const createproxy = function(L1, p) {
+	const L = getmainthread(L1);
 	/* target should be a function so that `typeof proxy` is "function"
 	 * we want `typeof js_proxy` to be "function" so that it's acceptable to native apis */
 	let target = function(){ return p(L); };
@@ -370,7 +372,7 @@ let jslib = {
 	},
 	"createproxy": function(L) {
 		lauxlib.luaL_checkany(L, 1);
-		let proxy = createproxy(getmainthread(L), lua.lua_toproxy(L, 1));
+		let proxy = createproxy(L, lua.lua_toproxy(L, 1));
 		push(L, proxy);
 		return 1;
 	},
