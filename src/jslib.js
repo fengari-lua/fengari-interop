@@ -327,7 +327,6 @@ const createproxy = function(L1, p) {
 	target.p = p;
 	target.L = L;
 	let js_proxy = new Proxy(target, proxy_handlers);
-	known_proxys.set(js_proxy, p);
 	return js_proxy;
 };
 
