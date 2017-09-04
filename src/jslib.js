@@ -392,6 +392,25 @@ let jslib = {
 	}
 };
 
+class PairsHelperState {
+	constructor(keys, u) {
+		this.keys = keys;
+		this.i = 0;
+		this.u = u;
+	}
+}
+
+const pairs_helper = function(L) {
+	let state = lua.lua_touserdata(L, 1);
+	if (!(state instanceof PairsHelperState))
+		lauxlib.luaL_argerror(L, 1, lua.to_luastring('Expected instance of PairsHelperState'));
+	let k = state.keys[state.i++];
+	let v = state.u[k];
+	push(L, k);
+	push(L, v);
+	return 2;
+};
+
 let jsmt = {
 	__index: function(L) {
 		let u = checkjs(L, 1);
@@ -430,7 +449,18 @@ let jsmt = {
 		}
 		push(L, apply(u, thisarg, args));
 		return 1;
-	}
+	},
+    __pairs: function(L) {
+		let u = checkjs(L, 1);
+		let keys = [];
+		for (let k in u) {
+			keys.push(k);
+		}
+
+		lua.lua_pushcfunction(L, pairs_helper);
+		lua.lua_pushlightuserdata(L, new PairsHelperState(keys, u));
+		return 2;
+    }
 };
 
 const luaopen_js = function(L) {
