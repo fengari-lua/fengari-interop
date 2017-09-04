@@ -311,11 +311,22 @@ const proxy_handlers = {
 	}
 };
 
-const createproxy = function(L1, p) {
+const valid_types = ["function", "object"];
+const valid_types_as_luastring = valid_types.map((v) => lua.to_luastring(v));
+
+const createproxy = function(L1, p, type) {
 	const L = getmainthread(L1);
-	/* target should be a function so that `typeof proxy` is "function"
-	 * we want `typeof js_proxy` to be "function" so that it's acceptable to native apis */
-	let target = function(){ return p(L); };
+	let target;
+	switch (type) {
+	case "function":
+		target = function(){};
+		break;
+	case "object":
+		target = {};
+		break;
+	default:
+		throw TypeError("invalid type to createproxy");
+	}
 	target.p = p;
 	target.L = L;
 	let js_proxy = new Proxy(target, proxy_handlers);
@@ -363,7 +374,8 @@ let jslib = {
 	},
 	"createproxy": function(L) {
 		lauxlib.luaL_checkany(L, 1);
-		let proxy = createproxy(L, lua.lua_toproxy(L, 1));
+		let type = valid_types[lauxlib.luaL_checkoption(L, 2, valid_types_as_luastring[0], valid_types_as_luastring)];
+		let proxy = createproxy(L, lua.lua_toproxy(L, 1), type);
 		push(L, proxy);
 		return 1;
 	},
