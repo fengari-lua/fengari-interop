@@ -75,13 +75,7 @@ const push = function(L, v) {
 		lua.lua_pushlightuserdata(L, v);
 		break;
 	case "function":
-		if (known_proxys.has(v)) {
-			let proxy = known_proxys.get(v);
-			if (lua.lua_isproxy(proxy, L)) {
-				proxy(L);
-				break;
-			}
-		} else if (lua.lua_isproxy(v, L)) {
+		if (lua.lua_isproxy(v, L)) {
 			v(L);
 			break;
 		}
@@ -252,8 +246,6 @@ const jsiterator = function(L, p) {
 	};
 };
 
-const known_proxys = new WeakMap();
-
 const wrap = function(L1, p) {
 	const L = getmainthread(L1);
 	/* we need `typeof js_proxy` to be "function" so that it's acceptable to native apis */
@@ -297,7 +289,7 @@ const wrap = function(L1, p) {
 	if (custom_inspect_symbol) {
 		js_proxy[custom_inspect_symbol] = js_proxy.toString;
 	}
-	known_proxys.set(js_proxy, p);
+	states.get(L).set(js_proxy, p);
 	return js_proxy;
 };
 
