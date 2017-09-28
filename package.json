@@ -1,38 +1,37 @@
 {
-	"name": "fengari-interop",
-	"version": "0.0.1",
-	"description": "JS library for Fengari",
-	"author": "Daurnimator <quae@daurnimator.com>",
-	"repository": {
-		"type": "git",
-		"url": "git+https://github.com/fengari-lua/fengari-interop.git"
-	},
-	"license": "MIT",
-	"keywords": [
-		"lua",
-		"fengari",
-		"language"
-	],
-	"bugs": {
-		"url": "https://github.com/fengari-lua/fengari-interop/issues"
-	},
-	"homepage": "https://github.com/fengari-lua/fengari-interop",
-	"dependencies": {
-		"fengari": "fengari-lua/fengari"
-	},
-	"main": "src/jslib.js",
-	"directories": {
-		"lib": "src"
-	},
-	"devDependencies": {
-		"fengari-node-cli": "fengari-lua/fengari-node-cli",
-		"babili-webpack-plugin": "^0.1.2",
-		"webpack": "^3.5.5"
-	},
-	"jshintConfig": {
-		"esversion": 6
-	},
-	"scripts": {
-		"build": "webpack"
-	}
+  "name": "fengari-interop",
+  "version": "0.0.1",
+  "description": "JS library for Fengari",
+  "author": "Daurnimator <quae@daurnimator.com>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fengari-lua/fengari-interop.git"
+  },
+  "license": "MIT",
+  "keywords": [
+    "lua",
+    "fengari",
+    "language"
+  ],
+  "bugs": {
+    "url": "https://github.com/fengari-lua/fengari-interop/issues"
+  },
+  "homepage": "https://github.com/fengari-lua/fengari-interop",
+  "main": "src/jslib.js",
+  "directories": {
+    "lib": "src"
+  },
+  "devDependencies": {
+    "babel-loader": "^7.1.2",
+    "babel-preset-env": "^1.6.0",
+    "babili-webpack-plugin": "^0.1.2",
+    "fengari-node-cli": "fengari-lua/fengari-node-cli",
+    "webpack": "^3.5.5"
+  },
+  "jshintConfig": {
+    "esversion": 6
+  },
+  "scripts": {
+    "build": "webpack"
+  }
 }

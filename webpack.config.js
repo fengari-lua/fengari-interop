@@ -1,42 +1,46 @@
+"use strict";
+
+const webpack = require('webpack');
 const path = require('path');
-const BabiliPlugin = require("babili-webpack-plugin");
 
 module.exports = [
-	{
-		entry: './src/jslib.js',
-		target: 'web',
-		output: {
-			path: path.resolve(__dirname, 'dist'),
-			filename: 'fengari_interop.js',
-			library: 'fengari_interop'
-		},
-		externals: {
-			"util": "util",
-			"fengari": "fengari"
-		},
-		plugins: [
-			new webpack.DefinePlugin({
-				WEB: JSON.stringify(true),
-			})
-		]
-	},
-	{
-		entry: './src/jslib.js',
-		target: 'web',
-		output: {
-			path: path.resolve(__dirname, 'dist'),
-			filename: 'fengari_interop.min.js',
-			library: 'fengari_interop'
-		},
-		externals: {
-			"util": "util",
-			"fengari": "fengari"
-		},
-		plugins: [
-			new webpack.DefinePlugin({
-				WEB: JSON.stringify(true),
-			}),
-			new BabiliPlugin()
-		]
-	}
+  {
+    entry: './src/jslib.js',
+    target: 'web',
+    node: false,
+    output: {
+      path: path.resolve(__dirname, 'dist'),
+      libraryTarget: 'umd',
+      filename: 'fengari_interop.js',
+      library: 'fengari_interop'
+    },
+    externals: {
+      fengari: {
+        commonjs: 'fengari',
+        commonjs2: 'fengari',
+        amd: 'fengari',
+        root: 'fengari'
+      }
+    },
+    module: {
+      rules: [
+        {
+          test: [/\.js$/],
+          loader: 'babel-loader',
+          options: {
+            presets: [['env', {
+              "targets": {
+                "browsers": ["last 2 versions", "safari >= 7"]
+              }
+            }]]
+          }
+        }
+      ]
+    },
+    plugins: [
+      new webpack.DefinePlugin({
+        WEB: JSON.stringify(true),
+      })
+    ]
+  }
 ];
