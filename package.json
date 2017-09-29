@@ -17,7 +17,7 @@
     "url": "https://github.com/fengari-lua/fengari-interop/issues"
   },
   "homepage": "https://github.com/fengari-lua/fengari-interop",
-  "main": "src/jslib.js",
+  "main": "dist/fengari_interop.js",
   "directories": {
     "lib": "src"
   },
