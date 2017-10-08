@@ -9,7 +9,7 @@ module.exports = [
 		output: {
 			path: path.resolve(__dirname, 'dist'),
 			filename: 'fengari_interop.js',
-			library: 'fengari_interop'
+			libraryTarget: 'global'
 		},
 		externals: {
 			"fengari": "fengari"
@@ -26,7 +26,7 @@ module.exports = [
 		output: {
 			path: path.resolve(__dirname, 'dist'),
 			filename: 'fengari_interop.min.js',
-			library: 'fengari_interop'
+			libraryTarget: 'global'
 		},
 		externals: {
 			"fengari": "fengari"
