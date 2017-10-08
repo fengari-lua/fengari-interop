@@ -26,14 +26,27 @@
 	},
 	"devDependencies": {
 		"babili-webpack-plugin": "^0.1.2",
+		"jshint": "^2.9.5",
 		"mocha": "^4.0.1",
 		"webpack": "^3.5.5"
 	},
 	"jshintConfig": {
-		"esversion": 6
+		"esversion": 6,
+		"globals": {
+			"window": true,
+			"WEB": true
+		},
+		"node": true,
+		"overrides": {
+			"test/*": {
+				"mocha": true
+			}
+		}
 	},
 	"scripts": {
 		"build": "webpack",
+		"lint": "jshint package.json src/ test/",
+		"pretest": "npm run lint",
 		"test": "mocha"
 	}
 }
