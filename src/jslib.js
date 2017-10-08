@@ -6,9 +6,11 @@ const lauxlib = fengari.lauxlib;
 const lualib  = fengari.lualib;
 
 let custom_inspect_symbol;
-try { /* for node.js */
-	custom_inspect_symbol = require('util').inspect.custom;
-} catch (e) {}
+if (!WEB) {
+	try { /* for node.js */
+		custom_inspect_symbol = require('util').inspect.custom;
+	} catch (e) {}
+}
 
 const apply = Reflect.apply;
 const construct = Reflect.construct;

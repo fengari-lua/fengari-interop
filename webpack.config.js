@@ -12,7 +12,6 @@ module.exports = [
 			library: 'fengari_interop'
 		},
 		externals: {
-			"util": "util",
 			"fengari": "fengari"
 		},
 		plugins: [
@@ -30,7 +29,6 @@ module.exports = [
 			library: 'fengari_interop'
 		},
 		externals: {
-			"util": "util",
 			"fengari": "fengari"
 		},
 		plugins: [
