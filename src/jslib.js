@@ -294,19 +294,19 @@ const wrap = function(L1, p) {
 };
 
 const proxy_handlers = {
-	apply: function(target, thisarg, args) {
+	"apply": function(target, thisarg, args) {
 		return invoke(target.L, target.p, thisarg, args, 1)[0];
 	},
-	get: function(target, k) {
+	"get": function(target, k) {
 		return get(target.L, target.p, k);
 	},
-	has: function(target, k) {
+	"has": function(target, k) {
 		return has(target.L, target.p, k);
 	},
-	set: function(target, k, v) {
+	"set": function(target, k, v) {
 		return set(target.L, target.p, k, v);
 	},
-	deleteProperty: function(target, k) {
+	"deleteProperty": function(target, k) {
 		return deleteProperty(target.L, target.p, k);
 	}
 };
@@ -393,13 +393,13 @@ let jslib = {
 };
 
 let jsmt = {
-	__index: function(L) {
+	"__index": function(L) {
 		let u = checkjs(L, 1);
 		let k = tojs(L, 2);
 		push(L, u[k]);
 		return 1;
 	},
-	__newindex: function(L) {
+	"__newindex": function(L) {
 		let u = checkjs(L, 1);
 		let k = tojs(L, 2);
 		let v = tojs(L, 3);
@@ -409,13 +409,13 @@ let jsmt = {
 			u[k] = v;
 		return 0;
 	},
-	__tostring: function(L) {
+	"__tostring": function(L) {
 		let u = checkjs(L, 1);
 		let s = toString(u);
 		lua.lua_pushstring(L, lua.to_luastring(s));
 		return 1;
 	},
-	__call: function(L) {
+	"__call": function(L) {
 		let u = checkjs(L, 1);
 		let nargs = lua.lua_gettop(L)-1;
 		let thisarg, args;
@@ -431,7 +431,7 @@ let jsmt = {
 		push(L, apply(u, thisarg, args));
 		return 1;
 	},
-	__pairs: function(L) {
+	"__pairs": function(L) {
 		let u = checkjs(L, 1);
 		let f = u[Symbol.for("__pairs")];
 		if (f === void 0)
@@ -467,13 +467,13 @@ let jsmt = {
 /* Create __pairs for all objects that inherit from Object */
 Object.prototype[Symbol.for("__pairs")] = function() {
 	return {
-		iter: function(last) {
+		"iter": function(last) {
 			if (this.index >= this.keys.length)
 				return;
 			let key = this.keys[this.index++];
 			return [key, this.object[key]];
 		},
-		state: {
+		"state": {
 			object: this,
 			keys: Object.keys(this),
 			index: 0,
