@@ -71,7 +71,7 @@ The `__pairs` Symbol can be used to describe how to iterate over a JavaScript ob
 
 `"iter"` should be a function that follows the standard [Lua generic for protocol](http://www.lua.org/manual/5.3/manual.html#3.3.5), that is, it gets called with your *state* (as `this`) and the previous value produced; it should return an array of values or `undefined` if done.
 
-e.g. to make `pairs` on a [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) return entries in the map via the [iterator symbol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/@@iterator)
+e.g. to make `pairs` on a [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) return entries in the map via the [iterator symbol](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/@@iterator):
 
 ```js
 Map.prototype[Symbol.for("__pairs")] = function() {
@@ -83,7 +83,7 @@ Map.prototype[Symbol.for("__pairs")] = function() {
 		},
 		state: this[Symbol.iterator]()
 	};
-}
+};
 ```
 
 A default `__pairs` is attached to `Object.prototype` that uses [`Object.keys`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys).

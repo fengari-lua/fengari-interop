@@ -437,7 +437,7 @@ let jsmt = {
 		let u = checkjs(L, 1);
 		let f = u[Symbol.for("__pairs")];
 		if (f === void 0)
-			lauxlib.luaL_argerror(L, 1, lua.to_luastring("no __pairs Symbol"));
+			lauxlib.luaL_argerror(L, 1, lua.to_luastring("js object has no __pairs Symbol"));
 		let r = f.call(u);
 		if (r === void 0)
 			lauxlib.luaL_error(L, lua.to_luastring("bad '__pairs' result (object with keys 'iter', 'state', 'first' expected)"));
