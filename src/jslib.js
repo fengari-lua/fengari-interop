@@ -14,6 +14,7 @@ if (!WEB) {
 
 const apply = Reflect.apply;
 const construct = Reflect.construct;
+const TypedArrayPrototype = Object.getPrototypeOf(new Int8Array());
 
 const toString = function(o) {
 	return ""+o;
@@ -463,6 +464,15 @@ let jsmt = {
 		push(L, r.state);
 		push(L, r.first);
 		return 3;
+	},
+	"__len": function(L) {
+		let u = checkjs(L, 1);
+		let f = u[Symbol.for("__len")];
+		if (f === void 0)
+			lauxlib.luaL_argerror(L, 1, lua.to_luastring("js object has no __len Symbol"));
+		let r = apply(f, u, []);
+		push(L, r);
+		return 1;
 	}
 };
 
@@ -482,6 +492,13 @@ Object.prototype[Symbol.for("__pairs")] = function() {
 		}
 	};
 };
+
+/* Create __len for all objects that inherit from Array */
+const __len = function() {
+	return this.length;
+};
+Array.prototype[Symbol.for("__len")] = __len;
+TypedArrayPrototype[Symbol.for("__len")] = __len;
 
 const luaopen_js = function(L) {
 	/* Add weak map to track objects seen */

@@ -87,3 +87,19 @@ Map.prototype[Symbol.for("__pairs")] = function() {
 ```
 
 A default `__pairs` is attached to `Object.prototype` that uses [`Object.keys`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys).
+
+
+### `__len`
+
+The `__len` Symbol can be used to describe how to get the length (used by the lua `#` operator) of a JavaScript object.
+Use `Symbol.for("__len")` to get the symbol. It should be used as a key on your objects, where the value is a function returning the length of your objects (passed as `this`).
+
+e.g. to have the lua `#` operator applied to a [Map](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map) return the [`size`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Map/size) field:
+
+```js
+Map.prototype[Symbol.for("__len")] = function() {
+	return this.size;
+};
+```
+
+A default `__len` is attached to `Array.prototype` and [TypedArray](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray) prototypes that returns the `.length` field.
