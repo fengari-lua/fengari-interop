@@ -421,11 +421,11 @@ let jsmt = {
 	"__call": function(L) {
 		let u = checkjs(L, 1);
 		let nargs = lua.lua_gettop(L)-1;
-		let thisarg, args;
+		let thisarg;
+		let args = new Array(nargs-1);
 		if (nargs > 0) {
 			thisarg = tojs(L, 2);
 			if (nargs-- > 0) {
-				args = new Array(nargs);
 				for (let i = 0; i < nargs; i++) {
 					args[i] = tojs(L, i+3);
 				}
