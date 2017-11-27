@@ -143,110 +143,178 @@ const invoke = function(L, p, thisarg, args, n_results) {
 	for (let i=0; i<args.length; i++) {
 		push(L, args[i]);
 	}
-	lua.lua_call(L, 1+args.length, n_results);
-	let nres = lua.lua_gettop(L)-base;
-	let res = new Array(nres);
-	for (let i=0; i<nres; i++) {
-		res[i] = tojs(L, base+i+1);
+	switch(lua.lua_pcall(L, 1+args.length, n_results, 0)) {
+	case lua.LUA_OK:
+		let nres = lua.lua_gettop(L)-base;
+		let res = new Array(nres);
+		for (let i=0; i<nres; i++) {
+			res[i] = tojs(L, base+i+1);
+		}
+		lua.lua_settop(L, base);
+		return res;
+	default:
+		let r = tojs(L, -1);
+		lua.lua_settop(L, base);
+		throw r;
 	}
-	lua.lua_settop(L, base);
-	return res;
 };
 
 const get = function(L, p, prop) {
-	lauxlib.luaL_checkstack(L, 2);
+	lauxlib.luaL_checkstack(L, 3);
+	lua.lua_pushcfunction(L, function(L) {
+		lua.lua_gettable(L, 1);
+		return 1;
+	});
 	p(L);
 	push(L, prop);
-	lua.lua_gettable(L, -2);
+	let status = lua.lua_pcall(L, 2, 1, 0);
 	let r = tojs(L, -1);
-	lua.lua_pop(L, 2);
-	return r;
+	lua.lua_pop(L, 1);
+	switch(status) {
+	case lua.LUA_OK:
+		return r;
+	default:
+		throw r;
+	}
 };
 
 const has = function(L, p, prop) {
-	lauxlib.luaL_checkstack(L, 2);
+	lauxlib.luaL_checkstack(L, 3);
+	lua.lua_pushcfunction(L, function(L) {
+		lua.lua_gettable(L, 1);
+		return 1;
+	});
 	p(L);
 	push(L, prop);
-	lua.lua_gettable(L, -2);
+	let status = lua.lua_pcall(L, 2, 1, 0);
 	let r = lua.lua_isnil(L, -1);
-	lua.lua_pop(L, 2);
-	return r;
+	lua.lua_pop(L, 1);
+	switch(status) {
+	case lua.LUA_OK:
+		return r;
+	default:
+		throw r;
+	}
 };
 
 const set = function(L, p, prop, value) {
-	lauxlib.luaL_checkstack(L, 3);
+	lauxlib.luaL_checkstack(L, 4);
+	lua.lua_pushcfunction(L, function(L) {
+		lua.lua_settable(L, 1);
+		return 0;
+	});
 	p(L);
 	push(L, prop);
 	push(L, value);
-	lua.lua_settable(L, -3);
-	lua.lua_pop(L, 1);
+	switch(lua.lua_pcall(L, 3, 0, 0)) {
+	case lua.LUA_OK:
+		return;
+	default:
+		let r = tojs(L, -1);
+		lua.lua_pop(L, 1);
+		throw r;
+	}
 };
 
 const deleteProperty = function(L, p, prop) {
-	lauxlib.luaL_checkstack(L, 3);
+	lauxlib.luaL_checkstack(L, 4);
+	lua.lua_pushcfunction(L, function(L) {
+		lua.lua_settable(L, 1);
+		return 0;
+	});
 	p(L);
 	push(L, prop);
 	lua.lua_pushnil(L);
-	lua.lua_settable(L, -3);
-	lua.lua_pop(L, 1);
+	switch(lua.lua_pcall(L, 3, 0, 0)) {
+	case lua.LUA_OK:
+		return;
+	default:
+		let r = tojs(L, -1);
+		lua.lua_pop(L, 1);
+		throw r;
+	}
 };
 
 const tostring = function(L, p) {
-	lauxlib.luaL_checkstack(L, 1);
+	lauxlib.luaL_checkstack(L, 2);
+	lua.lua_pushcfunction(L, function(L) {
+		lauxlib.luaL_tolstring(L, 1);
+		return 1;
+	});
 	p(L);
-	let r = lauxlib.luaL_tolstring(L, -1);
-	lua.lua_pop(L, 2);
-	return lua.to_jsstring(r);
+	let status = lua.lua_pcall(L, 1, 1, 0);
+	let r = lua.lua_tojsstring(L, -1);
+	lua.lua_pop(L, 1);
+	switch(status) {
+	case lua.LUA_OK:
+		return r;
+	default:
+		throw r;
+	}
 };
 
 /* implements lua's "Generic For" protocol */
 const iter_next = function() {
-	lauxlib.luaL_checkstack(this.L, 3);
-	let top = lua.lua_gettop(this.L);
-	this.iter(this.L);
-	this.state(this.L);
-	this.last(this.L);
-	lua.lua_call(this.L, 2, lua.LUA_MULTRET);
-	this.last = lua.lua_toproxy(this.L, top+1);
-	let r;
-	if (lua.lua_isnil(this.L, -1)) {
-		r = {
-			done: true,
-			value: void 0
-		};
-	} else {
-		let n_results = lua.lua_gettop(this.L) - top;
-		let result = new Array(n_results);
-		for (let i=0; i<n_results; i++) {
-			result[i] = tojs(this.L, top+i+1);
+	let L = this.L;
+	lauxlib.luaL_checkstack(L, 3);
+	let top = lua.lua_gettop(L);
+	this.iter(L);
+	this.state(L);
+	this.last(L);
+	switch(lua.lua_pcall(L, 2, lua.LUA_MULTRET, 0)) {
+	case lua.LUA_OK:
+		this.last = lua.lua_toproxy(L, top+1);
+		let r;
+		if (lua.lua_isnil(L, -1)) {
+			r = {
+				done: true,
+				value: void 0
+			};
+		} else {
+			let n_results = lua.lua_gettop(L) - top;
+			let result = new Array(n_results);
+			for (let i=0; i<n_results; i++) {
+				result[i] = tojs(L, top+i+1);
+			}
+			r = {
+				done: false,
+				value: result
+			};
 		}
-		r = {
-			done: false,
-			value: result
-		};
+		lua.lua_settop(L, top);
+		return r;
+	default:
+		let e = tojs(L, -1);
+		lua.lua_pop(L, 1);
+		throw e;
 	}
-	lua.lua_settop(this.L, top);
-	return r;
 };
 
 /* make iteration use pairs() */
 const jsiterator = function(L, p) {
+	lauxlib.luaL_checkstack(this.L, 2);
 	lauxlib.luaL_requiref(L, lua.to_luastring("_G"), lualib.luaopen_base, 0);
 	lua.lua_getfield(L, -1, lua.to_luastring("pairs"));
 	lua.lua_remove(L, -2);
 	p(L);
-	lua.lua_call(L, 1, 3);
-	let iter = lua.lua_toproxy(L, -3);
-	let state = lua.lua_toproxy(L, -2);
-	let last = lua.lua_toproxy(L, -1);
-	lua.lua_pop(L, 3);
-	return {
-		L: L,
-		iter: iter,
-		state: state,
-		last: last,
-		next: iter_next
-	};
+	switch(lua.lua_pcall(L, 1, 3, 0)) {
+	case lua.LUA_OK:
+		let iter = lua.lua_toproxy(L, -3);
+		let state = lua.lua_toproxy(L, -2);
+		let last = lua.lua_toproxy(L, -1);
+		lua.lua_pop(L, 3);
+		return {
+			L: L,
+			iter: iter,
+			state: state,
+			last: last,
+			next: iter_next
+		};
+	default:
+		let r = tojs(L, -1);
+		lua.lua_pop(L, 1);
+		throw r;
+	}
 };
 
 const wrap = function(L1, p) {
