@@ -364,13 +364,16 @@ const wrap = function(L1, p) {
 	return js_proxy;
 };
 
+const L_symbol = Symbol("lua_State");
+const p_symbol = Symbol("fengari-proxy");
+
 const proxy_handlers = {
 	"apply": function(target, thisarg, args) {
-		return invoke(target.L, target.p, thisarg, args, 1)[0];
+		return invoke(target[L_symbol], target[p_symbol], thisarg, args, 1)[0];
 	},
 	"construct": function(target, argumentsList) {
-		let L = target.L;
-		let p = target.p;
+		let L = target[L_symbol];
+		let p = target[p_symbol];
 		let arg_length = argumentsList.length;
 		lauxlib.luaL_checkstack(L, 2+arg_length);
 		p(L);
@@ -394,8 +397,8 @@ const proxy_handlers = {
 		}
 	},
 	"defineProperty": function(target, prop, desc) {
-		let L = target.L;
-		let p = target.p;
+		let L = target[L_symbol];
+		let p = target[p_symbol];
 		lauxlib.luaL_checkstack(L, 4);
 		p(L);
 		if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("defineProperty")) === lua.LUA_TNIL) {
@@ -416,14 +419,14 @@ const proxy_handlers = {
 		}
 	},
 	"deleteProperty": function(target, k) {
-		return deleteProperty(target.L, target.p, k);
+		return deleteProperty(target[L_symbol], target[p_symbol], k);
 	},
 	"get": function(target, k) {
-		return get(target.L, target.p, k);
+		return get(target[L_symbol], target[p_symbol], k);
 	},
 	"getOwnPropertyDescriptor": function(target, prop) {
-		let L = target.L;
-		let p = target.p;
+		let L = target[L_symbol];
+		let p = target[p_symbol];
 		lauxlib.luaL_checkstack(L, 3);
 		p(L);
 		if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("getOwnPropertyDescriptor")) === lua.LUA_TNIL) {
@@ -443,8 +446,8 @@ const proxy_handlers = {
 		}
 	},
 	"getPrototypeOf": function(target) {
-		let L = target.L;
-		let p = target.p;
+		let L = target[L_symbol];
+		let p = target[p_symbol];
 		lauxlib.luaL_checkstack(L, 2);
 		p(L);
 		if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("getPrototypeOf")) === lua.LUA_TNIL) {
@@ -463,11 +466,11 @@ const proxy_handlers = {
 		}
 	},
 	"has": function(target, k) {
-		return has(target.L, target.p, k);
+		return has(target[L_symbol], target[p_symbol], k);
 	},
 	"ownKeys": function(target) {
-		let L = target.L;
-		let p = target.p;
+		let L = target[L_symbol];
+		let p = target[p_symbol];
 		lauxlib.luaL_checkstack(L, 2);
 		p(L);
 		if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("ownKeys")) === lua.LUA_TNIL) {
@@ -486,11 +489,11 @@ const proxy_handlers = {
 		}
 	},
 	"set": function(target, k, v) {
-		return set(target.L, target.p, k, v);
+		return set(target[L_symbol], target[p_symbol], k, v);
 	},
 	"setPrototypeOf": function(target, prototype) {
-		let L = target.L;
-		let p = target.p;
+		let L = target[L_symbol];
+		let p = target[p_symbol];
 		lauxlib.luaL_checkstack(L, 3);
 		p(L);
 		if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("setPrototypeOf")) === lua.LUA_TNIL) {
@@ -527,8 +530,8 @@ const createproxy = function(L1, p, type) {
 	default:
 		throw TypeError("invalid type to createproxy");
 	}
-	target.p = p;
-	target.L = L;
+	target[p_symbol] = p;
+	target[L_symbol] = L;
 	let js_proxy = new Proxy(target, proxy_handlers);
 	return js_proxy;
 };
