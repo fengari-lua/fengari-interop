@@ -368,6 +368,9 @@ const proxy_handlers = {
 	"apply": function(target, thisarg, args) {
 		return invoke(target.L, target.p, thisarg, args, 1)[0];
 	},
+	"deleteProperty": function(target, k) {
+		return deleteProperty(target.L, target.p, k);
+	},
 	"get": function(target, k) {
 		return get(target.L, target.p, k);
 	},
@@ -376,9 +379,6 @@ const proxy_handlers = {
 	},
 	"set": function(target, k, v) {
 		return set(target.L, target.p, k, v);
-	},
-	"deleteProperty": function(target, k) {
-		return deleteProperty(target.L, target.p, k);
 	}
 };
 
