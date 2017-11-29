@@ -131,6 +131,20 @@ const tojs = function(L, idx) {
 	}
 };
 
+/* Calls function on the stack with `nargs` from the stack.
+   On lua error, re-throws as javascript error
+   On success, returns single return value */
+const jscall = function(L, nargs) {
+	let status = lua.lua_pcall(L, nargs, 1, 0);
+	let r = tojs(L, -1);
+	lua.lua_pop(L, 1);
+	switch(status) {
+	case lua.LUA_OK:
+		return r;
+	default:
+		throw r;
+	}
+};
 
 const invoke = function(L, p, thisarg, args, n_results) {
 	lauxlib.luaL_checkstack(L, 2+args.length);
@@ -167,15 +181,7 @@ const get = function(L, p, prop) {
 	});
 	p(L);
 	push(L, prop);
-	let status = lua.lua_pcall(L, 2, 1, 0);
-	let r = tojs(L, -1);
-	lua.lua_pop(L, 1);
-	switch(status) {
-	case lua.LUA_OK:
-		return r;
-	default:
-		throw r;
-	}
+	return jscall(L, 2);
 };
 
 const has = function(L, p, prop) {
@@ -242,15 +248,7 @@ const tostring = function(L, p) {
 		return 1;
 	});
 	p(L);
-	let status = lua.lua_pcall(L, 1, 1, 0);
-	let r = lua.lua_tojsstring(L, -1);
-	lua.lua_pop(L, 1);
-	switch(status) {
-	case lua.LUA_OK:
-		return r;
-	default:
-		throw r;
-	}
+	return jscall(L, 1);
 };
 
 /* implements lua's "Generic For" protocol */
@@ -386,15 +384,7 @@ const proxy_handlers = {
 		for (let i=0; i<arg_length; i++) {
 			push(L, argumentsList[i]);
 		}
-		let status = lua.lua_pcall(L, 1+arg_length, 1, 0);
-		let r = tojs(L, -1);
-		lua.lua_pop(L, 1);
-		switch(status) {
-		case lua.LUA_OK:
-			return r;
-		default:
-			throw r;
-		}
+		return jscall(L, 1+arg_length);
 	},
 	"defineProperty": function(target, prop, desc) {
 		let L = target[L_symbol];
@@ -408,15 +398,7 @@ const proxy_handlers = {
 		lua.lua_rotate(L, -2, 1);
 		push(L, prop);
 		push(L, desc);
-		let status = lua.lua_pcall(L, 3, 1, 0);
-		let r = tojs(L, -1);
-		lua.lua_pop(L, 1);
-		switch(status) {
-		case lua.LUA_OK:
-			return r;
-		default:
-			throw r;
-		}
+		return jscall(L, 3);
 	},
 	"deleteProperty": function(target, k) {
 		return deleteProperty(target[L_symbol], target[p_symbol], k);
@@ -435,15 +417,7 @@ const proxy_handlers = {
 		}
 		lua.lua_rotate(L, -2, 1);
 		push(L, prop);
-		let status = lua.lua_pcall(L, 2, 1, 0);
-		let r = tojs(L, -1);
-		lua.lua_pop(L, 1);
-		switch(status) {
-		case lua.LUA_OK:
-			return r;
-		default:
-			throw r;
-		}
+		return jscall(L, 2);
 	},
 	"getPrototypeOf": function(target) {
 		let L = target[L_symbol];
@@ -455,15 +429,7 @@ const proxy_handlers = {
 			return null;
 		}
 		lua.lua_rotate(L, -2, 1);
-		let status = lua.lua_pcall(L, 1, 1, 0);
-		let r = tojs(L, -1);
-		lua.lua_pop(L, 1);
-		switch(status) {
-		case lua.LUA_OK:
-			return r;
-		default:
-			throw r;
-		}
+		return jscall(L, 1);
 	},
 	"has": function(target, k) {
 		return has(target[L_symbol], target[p_symbol], k);
@@ -478,15 +444,7 @@ const proxy_handlers = {
 			return;
 		}
 		lua.lua_rotate(L, -2, 1);
-		let status = lua.lua_pcall(L, 1, 1, 0);
-		let r = tojs(L, -1);
-		lua.lua_pop(L, 1);
-		switch(status) {
-		case lua.LUA_OK:
-			return r;
-		default:
-			throw r;
-		}
+		return jscall(L, 1);
 	},
 	"set": function(target, k, v) {
 		return set(target[L_symbol], target[p_symbol], k, v);
@@ -502,15 +460,7 @@ const proxy_handlers = {
 		}
 		lua.lua_rotate(L, -2, 1);
 		push(L, prototype);
-		let status = lua.lua_pcall(L, 2, 1, 0);
-		let r = tojs(L, -1);
-		lua.lua_pop(L, 1);
-		switch(status) {
-		case lua.LUA_OK:
-			return r;
-		default:
-			throw r;
-		}
+		return jscall(L, 2);
 	}
 };
 
