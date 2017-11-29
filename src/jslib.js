@@ -399,6 +399,26 @@ const proxy_handlers = {
 	"get": function(target, k) {
 		return get(target.L, target.p, k);
 	},
+	"getPrototypeOf": function(target) {
+		let L = target.L;
+		let p = target.p;
+		lauxlib.luaL_checkstack(L, 2);
+		p(L);
+		if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("getPrototypeOf")) === lua.LUA_TNIL) {
+			lua.lua_pop(L, 1);
+			return null;
+		}
+		lua.lua_rotate(L, -2, 1);
+		let status = lua.lua_pcall(L, 1, 1, 0);
+		let r = tojs(L, -1);
+		lua.lua_pop(L, 1);
+		switch(status) {
+		case lua.LUA_OK:
+			return r;
+		default:
+			throw r;
+		}
+	},
 	"has": function(target, k) {
 		return has(target.L, target.p, k);
 	},
