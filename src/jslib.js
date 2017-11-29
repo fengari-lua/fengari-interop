@@ -368,6 +368,31 @@ const proxy_handlers = {
 	"apply": function(target, thisarg, args) {
 		return invoke(target.L, target.p, thisarg, args, 1)[0];
 	},
+	"construct": function(target, argumentsList) {
+		let L = target.L;
+		let p = target.p;
+		let arg_length = argumentsList.length;
+		lauxlib.luaL_checkstack(L, 2+arg_length);
+		p(L);
+		let idx = lua.lua_gettop(L);
+		if (lauxlib.luaL_getmetafield(L, idx, lua.to_luastring("construct")) === lua.LUA_TNIL) {
+			lua.lua_pop(L, 1);
+			throw new TypeError("not a constructor");
+		}
+		lua.lua_rotate(L, idx, 1);
+		for (let i=0; i<arg_length; i++) {
+			push(L, argumentsList[i]);
+		}
+		let status = lua.lua_pcall(L, 1+arg_length, 1, 0);
+		let r = tojs(L, -1);
+		lua.lua_pop(L, 1);
+		switch(status) {
+		case lua.LUA_OK:
+			return r;
+		default:
+			throw r;
+		}
+	},
 	"deleteProperty": function(target, k) {
 		return deleteProperty(target.L, target.p, k);
 	},
