@@ -393,11 +393,54 @@ const proxy_handlers = {
 			throw r;
 		}
 	},
+	"defineProperty": function(target, prop, desc) {
+		let L = target.L;
+		let p = target.p;
+		lauxlib.luaL_checkstack(L, 4);
+		p(L);
+		if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("defineProperty")) === lua.LUA_TNIL) {
+			lua.lua_pop(L, 1);
+			return false;
+		}
+		lua.lua_rotate(L, -2, 1);
+		push(L, prop);
+		push(L, desc);
+		let status = lua.lua_pcall(L, 3, 1, 0);
+		let r = tojs(L, -1);
+		lua.lua_pop(L, 1);
+		switch(status) {
+		case lua.LUA_OK:
+			return r;
+		default:
+			throw r;
+		}
+	},
 	"deleteProperty": function(target, k) {
 		return deleteProperty(target.L, target.p, k);
 	},
 	"get": function(target, k) {
 		return get(target.L, target.p, k);
+	},
+	"getOwnPropertyDescriptor": function(target, prop) {
+		let L = target.L;
+		let p = target.p;
+		lauxlib.luaL_checkstack(L, 3);
+		p(L);
+		if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("getOwnPropertyDescriptor")) === lua.LUA_TNIL) {
+			lua.lua_pop(L, 1);
+			return;
+		}
+		lua.lua_rotate(L, -2, 1);
+		push(L, prop);
+		let status = lua.lua_pcall(L, 2, 1, 0);
+		let r = tojs(L, -1);
+		lua.lua_pop(L, 1);
+		switch(status) {
+		case lua.LUA_OK:
+			return r;
+		default:
+			throw r;
+		}
 	},
 	"getPrototypeOf": function(target) {
 		let L = target.L;
