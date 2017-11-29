@@ -532,8 +532,7 @@ const createproxy = function(L1, p, type) {
 	}
 	target[p_symbol] = p;
 	target[L_symbol] = L;
-	let js_proxy = new Proxy(target, proxy_handlers);
-	return js_proxy;
+	return new Proxy(target, proxy_handlers);
 };
 
 const get_iterator = function(L, idx) {
@@ -578,8 +577,8 @@ let jslib = {
 	"createproxy": function(L) {
 		lauxlib.luaL_checkany(L, 1);
 		let type = valid_types[lauxlib.luaL_checkoption(L, 2, valid_types_as_luastring[0], valid_types_as_luastring)];
-		let proxy = createproxy(L, lua.lua_toproxy(L, 1), type);
-		push(L, proxy);
+		let fengariProxy = createproxy(L, lua.lua_toproxy(L, 1), type);
+		push(L, fengariProxy);
 		return 1;
 	},
 	"tonumber": function(L) {
