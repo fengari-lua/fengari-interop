@@ -362,154 +362,6 @@ const wrap = function(L1, p) {
 	return js_proxy;
 };
 
-const L_symbol = Symbol("lua_State");
-const p_symbol = Symbol("fengari-proxy");
-
-const proxy_handlers = {
-	"apply": function(target, thisarg, args) {
-		return invoke(target[L_symbol], target[p_symbol], thisarg, args, 1)[0];
-	},
-	"construct": function(target, argumentsList) {
-		let L = target[L_symbol];
-		let p = target[p_symbol];
-		let arg_length = argumentsList.length;
-		lauxlib.luaL_checkstack(L, 2+arg_length);
-		p(L);
-		let idx = lua.lua_gettop(L);
-		if (lauxlib.luaL_getmetafield(L, idx, lua.to_luastring("construct")) === lua.LUA_TNIL) {
-			lua.lua_pop(L, 1);
-			throw new TypeError("not a constructor");
-		}
-		lua.lua_rotate(L, idx, 1);
-		for (let i=0; i<arg_length; i++) {
-			push(L, argumentsList[i]);
-		}
-		return jscall(L, 1+arg_length);
-	},
-	"defineProperty": function(target, prop, desc) {
-		let L = target[L_symbol];
-		let p = target[p_symbol];
-		lauxlib.luaL_checkstack(L, 4);
-		p(L);
-		if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("defineProperty")) === lua.LUA_TNIL) {
-			lua.lua_pop(L, 1);
-			return false;
-		}
-		lua.lua_rotate(L, -2, 1);
-		push(L, prop);
-		push(L, desc);
-		return jscall(L, 3);
-	},
-	"deleteProperty": function(target, k) {
-		return deleteProperty(target[L_symbol], target[p_symbol], k);
-	},
-	"get": function(target, k) {
-		return get(target[L_symbol], target[p_symbol], k);
-	},
-	"getOwnPropertyDescriptor": function(target, prop) {
-		let L = target[L_symbol];
-		let p = target[p_symbol];
-		lauxlib.luaL_checkstack(L, 3);
-		p(L);
-		if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("getOwnPropertyDescriptor")) === lua.LUA_TNIL) {
-			lua.lua_pop(L, 1);
-			return;
-		}
-		lua.lua_rotate(L, -2, 1);
-		push(L, prop);
-		return jscall(L, 2);
-	},
-	"getPrototypeOf": function(target) {
-		let L = target[L_symbol];
-		let p = target[p_symbol];
-		lauxlib.luaL_checkstack(L, 2);
-		p(L);
-		if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("getPrototypeOf")) === lua.LUA_TNIL) {
-			lua.lua_pop(L, 1);
-			return null;
-		}
-		lua.lua_rotate(L, -2, 1);
-		return jscall(L, 1);
-	},
-	"has": function(target, k) {
-		return has(target[L_symbol], target[p_symbol], k);
-	},
-	"ownKeys": function(target) {
-		let L = target[L_symbol];
-		let p = target[p_symbol];
-		lauxlib.luaL_checkstack(L, 2);
-		p(L);
-		if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("ownKeys")) === lua.LUA_TNIL) {
-			lua.lua_pop(L, 1);
-			return;
-		}
-		lua.lua_rotate(L, -2, 1);
-		return jscall(L, 1);
-	},
-	"set": function(target, k, v) {
-		return set(target[L_symbol], target[p_symbol], k, v);
-	},
-	"setPrototypeOf": function(target, prototype) {
-		let L = target[L_symbol];
-		let p = target[p_symbol];
-		lauxlib.luaL_checkstack(L, 3);
-		p(L);
-		if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("setPrototypeOf")) === lua.LUA_TNIL) {
-			lua.lua_pop(L, 1);
-			return false;
-		}
-		lua.lua_rotate(L, -2, 1);
-		push(L, prototype);
-		return jscall(L, 2);
-	}
-};
-
-const valid_types = ["function", "object"];
-const valid_types_as_luastring = valid_types.map((v) => lua.to_luastring(v));
-
-/*
-  Functions created with `function(){}` have a non-configurable .prototype
-  field. This causes issues with the .ownKeys and .getOwnPropertyDescriptor
-  traps.
-  However ES6 arrow functions do not (tested in firefox 57.0 and chrome 62).
-
-  ```js
-  Reflect.ownKeys((function(){})) // Array [ "prototype", "length", "name" ]
-  Reflect.ownKeys((()=>void 0))   // Array [ "length", "name" ]
-  ```
-
-  We use Function() here to get prevent transpilers from converting to a
-  non-arrow function.
-  Additionally, we avoid setting the internal name field by never giving the
-  new function a name in the block it was defined (and instead delete-ing
-  the configurable fields .length and .name in a wrapper function)
-*/
-const make_arrow_function = Function("return ()=>void 0;");
-const raw_function = function() {
-	let f = make_arrow_function();
-	delete f.length;
-	delete f.name;
-	return f;
-};
-
-const createproxy = function(L1, p, type) {
-	const L = getmainthread(L1);
-	let target;
-	switch (type) {
-	case "function":
-		target = raw_function();
-		break;
-	case "object":
-		target = {};
-		break;
-	default:
-		throw TypeError("invalid type to createproxy");
-	}
-	target[p_symbol] = p;
-	target[L_symbol] = L;
-	return new Proxy(target, proxy_handlers);
-};
-
 const get_iterator = function(L, idx) {
 	let u = checkjs(L, idx);
 	let getiter = u[Symbol.iterator];
@@ -532,7 +384,7 @@ const next = function(L) {
 	}
 };
 
-let jslib = {
+const jslib = {
 	"new": function(L) {
 		let u = tojs(L, 1);
 		let nargs = lua.lua_gettop(L)-1;
@@ -549,13 +401,6 @@ let jslib = {
 		push(L, iter);
 		return 2;
 	},
-	"createproxy": function(L) {
-		lauxlib.luaL_checkany(L, 1);
-		let type = valid_types[lauxlib.luaL_checkoption(L, 2, valid_types_as_luastring[0], valid_types_as_luastring)];
-		let fengariProxy = createproxy(L, lua.lua_toproxy(L, 1), type);
-		push(L, fengariProxy);
-		return 1;
-	},
 	"tonumber": function(L) {
 		let u = tojs(L, 1);
 		lua.lua_pushnumber(L, +u);
@@ -568,6 +413,163 @@ let jslib = {
 		return 1;
 	}
 };
+
+if (typeof Proxy === "function") {
+	const L_symbol = Symbol("lua_State");
+	const p_symbol = Symbol("fengari-proxy");
+
+	const proxy_handlers = {
+		"apply": function(target, thisarg, args) {
+			return invoke(target[L_symbol], target[p_symbol], thisarg, args, 1)[0];
+		},
+		"construct": function(target, argumentsList) {
+			let L = target[L_symbol];
+			let p = target[p_symbol];
+			let arg_length = argumentsList.length;
+			lauxlib.luaL_checkstack(L, 2+arg_length);
+			p(L);
+			let idx = lua.lua_gettop(L);
+			if (lauxlib.luaL_getmetafield(L, idx, lua.to_luastring("construct")) === lua.LUA_TNIL) {
+				lua.lua_pop(L, 1);
+				throw new TypeError("not a constructor");
+			}
+			lua.lua_rotate(L, idx, 1);
+			for (let i=0; i<arg_length; i++) {
+				push(L, argumentsList[i]);
+			}
+			return jscall(L, 1+arg_length);
+		},
+		"defineProperty": function(target, prop, desc) {
+			let L = target[L_symbol];
+			let p = target[p_symbol];
+			lauxlib.luaL_checkstack(L, 4);
+			p(L);
+			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("defineProperty")) === lua.LUA_TNIL) {
+				lua.lua_pop(L, 1);
+				return false;
+			}
+			lua.lua_rotate(L, -2, 1);
+			push(L, prop);
+			push(L, desc);
+			return jscall(L, 3);
+		},
+		"deleteProperty": function(target, k) {
+			return deleteProperty(target[L_symbol], target[p_symbol], k);
+		},
+		"get": function(target, k) {
+			return get(target[L_symbol], target[p_symbol], k);
+		},
+		"getOwnPropertyDescriptor": function(target, prop) {
+			let L = target[L_symbol];
+			let p = target[p_symbol];
+			lauxlib.luaL_checkstack(L, 3);
+			p(L);
+			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("getOwnPropertyDescriptor")) === lua.LUA_TNIL) {
+				lua.lua_pop(L, 1);
+				return;
+			}
+			lua.lua_rotate(L, -2, 1);
+			push(L, prop);
+			return jscall(L, 2);
+		},
+		"getPrototypeOf": function(target) {
+			let L = target[L_symbol];
+			let p = target[p_symbol];
+			lauxlib.luaL_checkstack(L, 2);
+			p(L);
+			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("getPrototypeOf")) === lua.LUA_TNIL) {
+				lua.lua_pop(L, 1);
+				return null;
+			}
+			lua.lua_rotate(L, -2, 1);
+			return jscall(L, 1);
+		},
+		"has": function(target, k) {
+			return has(target[L_symbol], target[p_symbol], k);
+		},
+		"ownKeys": function(target) {
+			let L = target[L_symbol];
+			let p = target[p_symbol];
+			lauxlib.luaL_checkstack(L, 2);
+			p(L);
+			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("ownKeys")) === lua.LUA_TNIL) {
+				lua.lua_pop(L, 1);
+				return;
+			}
+			lua.lua_rotate(L, -2, 1);
+			return jscall(L, 1);
+		},
+		"set": function(target, k, v) {
+			return set(target[L_symbol], target[p_symbol], k, v);
+		},
+		"setPrototypeOf": function(target, prototype) {
+			let L = target[L_symbol];
+			let p = target[p_symbol];
+			lauxlib.luaL_checkstack(L, 3);
+			p(L);
+			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("setPrototypeOf")) === lua.LUA_TNIL) {
+				lua.lua_pop(L, 1);
+				return false;
+			}
+			lua.lua_rotate(L, -2, 1);
+			push(L, prototype);
+			return jscall(L, 2);
+		}
+	};
+
+	/*
+	  Functions created with `function(){}` have a non-configurable .prototype
+	  field. This causes issues with the .ownKeys and .getOwnPropertyDescriptor
+	  traps.
+	  However ES6 arrow functions do not (tested in firefox 57.0 and chrome 62).
+
+	  ```js
+	  Reflect.ownKeys((function(){})) // Array [ "prototype", "length", "name" ]
+	  Reflect.ownKeys((()=>void 0))   // Array [ "length", "name" ]
+	  ```
+
+	  We use Function() here to get prevent transpilers from converting to a
+	  non-arrow function.
+	  Additionally, we avoid setting the internal name field by never giving the
+	  new function a name in the block it was defined (and instead delete-ing
+	  the configurable fields .length and .name in a wrapper function)
+	*/
+	const make_arrow_function = Function("return ()=>void 0;");
+	const raw_function = function() {
+		let f = make_arrow_function();
+		delete f.length;
+		delete f.name;
+		return f;
+	};
+
+	const createproxy = function(L1, p, type) {
+		const L = getmainthread(L1);
+		let target;
+		switch (type) {
+		case "function":
+			target = raw_function();
+			break;
+		case "object":
+			target = {};
+			break;
+		default:
+			throw TypeError("invalid type to createproxy");
+		}
+		target[p_symbol] = p;
+		target[L_symbol] = L;
+		return new Proxy(target, proxy_handlers);
+	};
+
+	const valid_types = ["function", "object"];
+	const valid_types_as_luastring = valid_types.map((v) => lua.to_luastring(v));
+	jslib["createproxy"] = function(L) {
+		lauxlib.luaL_checkany(L, 1);
+		let type = valid_types[lauxlib.luaL_checkoption(L, 2, valid_types_as_luastring[0], valid_types_as_luastring)];
+		let fengariProxy = createproxy(L, lua.lua_toproxy(L, 1), type);
+		push(L, fengariProxy);
+		return 1;
+	};
+}
 
 let jsmt = {
 	"__index": function(L) {

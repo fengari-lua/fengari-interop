@@ -46,6 +46,8 @@ end
 
 ### `createproxy(x[, type])`
 
+*Note: Only available if your JS environment has the Proxy constructor*
+
 Creates a JavaScript [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) object. The proxy supports calling (`apply`), indexing (`get` and `has`) and setting (`set` and `deleteProperty`).
 
 `type` is the desired result for `typeof proxy`; it may be `"function"` (the default) or `"object"`.
