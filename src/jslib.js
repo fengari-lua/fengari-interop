@@ -467,12 +467,37 @@ const proxy_handlers = {
 const valid_types = ["function", "object"];
 const valid_types_as_luastring = valid_types.map((v) => lua.to_luastring(v));
 
+/*
+  Functions created with `function(){}` have a non-configurable .prototype
+  field. This causes issues with the .ownKeys and .getOwnPropertyDescriptor
+  traps.
+  However ES6 arrow functions do not (tested in firefox 57.0 and chrome 62).
+
+  ```js
+  Reflect.ownKeys((function(){})) // Array [ "prototype", "length", "name" ]
+  Reflect.ownKeys((()=>void 0))   // Array [ "length", "name" ]
+  ```
+
+  We use Function() here to get prevent transpilers from converting to a
+  non-arrow function.
+  Additionally, we avoid setting the internal name field by never giving the
+  new function a name in the block it was defined (and instead delete-ing
+  the configurable fields .length and .name in a wrapper function)
+*/
+const make_arrow_function = Function("return ()=>void 0;");
+const raw_function = function() {
+	let f = make_arrow_function();
+	delete f.length;
+	delete f.name;
+	return f;
+};
+
 const createproxy = function(L1, p, type) {
 	const L = getmainthread(L1);
 	let target;
 	switch (type) {
 	case "function":
-		target = function(){};
+		target = raw_function();
 		break;
 	case "object":
 		target = {};
