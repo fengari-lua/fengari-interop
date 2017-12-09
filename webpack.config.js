@@ -16,7 +16,7 @@ module.exports = [
 		},
 		plugins: [
 			new webpack.DefinePlugin({
-				WEB: JSON.stringify(true),
+				"typeof process": JSON.stringify("undefined")
 			})
 		]
 	},
@@ -33,7 +33,7 @@ module.exports = [
 		},
 		plugins: [
 			new webpack.DefinePlugin({
-				WEB: JSON.stringify(true),
+				"typeof process": JSON.stringify("undefined")
 			}),
 			new BabiliPlugin()
 		]

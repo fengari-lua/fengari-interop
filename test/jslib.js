@@ -1,5 +1,4 @@
 "use strict";
-global.WEB = false;
 const fengari = require("fengari");
 const lua = fengari.lua;
 const lauxlib = fengari.lauxlib;

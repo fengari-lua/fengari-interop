@@ -6,7 +6,7 @@ const lauxlib = fengari.lauxlib;
 const lualib  = fengari.lualib;
 
 let custom_inspect_symbol;
-if (!WEB) {
+if (typeof process !== "undefined") {
 	try { /* for node.js */
 		custom_inspect_symbol = require('util').inspect.custom;
 	} catch (e) {}
@@ -694,7 +694,7 @@ const luaopen_js = function(L) {
 	lua.lua_rawsetp(L, lua.LUA_REGISTRYINDEX, null);
 	lua.lua_setfield(L, -2, lua.to_luastring("null"));
 
-	if (WEB) {
+	if (typeof process === "undefined") {
 		push(L, window);
 	} else {
 		push(L, global);

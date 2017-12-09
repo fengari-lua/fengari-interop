@@ -33,8 +33,7 @@
 	"jshintConfig": {
 		"esversion": 6,
 		"globals": {
-			"window": true,
-			"WEB": true
+			"window": true
 		},
 		"node": true,
 		"overrides": {
