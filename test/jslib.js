@@ -1,9 +1,11 @@
 "use strict";
+
 const fengari = require("fengari");
 const lua = fengari.lua;
 const lauxlib = fengari.lauxlib;
 const lualib = fengari.lualib;
 const assert = require("assert");
+
 describe("fengari-interop", function() {
 	it("loads successfully", function() {
 		const jslib = require("../src/jslib.js");
@@ -26,7 +28,7 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("pushed null is same", function() {
+	it("pushes same null every time", function() {
 		const jslib = require("../src/jslib.js");
 		const L = new_state(true);
 		if (lauxlib.luaL_loadstring(L, lua.to_luastring(`
