@@ -26,26 +26,59 @@
 	},
 	"devDependencies": {
 		"babili-webpack-plugin": "^0.1.2",
-		"jshint": "^2.9.5",
+		"eslint": "^4.13.0",
 		"mocha": "^4.0.1",
 		"webpack": "^3.5.5"
 	},
-	"jshintConfig": {
-		"esversion": 6,
-		"globals": {
-			"window": true
-		},
-		"node": true,
-		"overrides": {
-			"test/*": {
-				"mocha": true
-			}
-		}
-	},
 	"scripts": {
 		"build": "webpack",
-		"lint": "jshint package.json src/ test/",
+		"lint": "eslint src/ test/",
 		"pretest": "npm run lint",
 		"test": "mocha"
+	},
+	"eslintConfig": {
+		"env": {
+			"browser": true,
+			"es6": true,
+			"node": true
+		},
+		"extends": "eslint:recommended",
+		"rules": {
+			"indent": [
+				"error",
+				"tab",
+				{
+					"SwitchCase": 1
+				}
+			],
+			"linebreak-style": [
+				"error",
+				"unix"
+			],
+			"no-empty": [
+				2,
+				{
+					"allowEmptyCatch": true
+				}
+			],
+			"no-unused-vars": [
+				2,
+				{
+					"args": "none"
+				}
+			],
+			"semi": [
+				"error",
+				"always"
+			]
+		},
+		"overrides": [
+			{
+				"files": [ "test/*.js" ],
+				"env": {
+					"mocha": true
+				}
+			}
+		]
 	}
 }

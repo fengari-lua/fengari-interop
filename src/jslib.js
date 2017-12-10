@@ -62,72 +62,74 @@ const atnativeerror = function(L) {
 
 const push = function(L, v) {
 	switch (typeof v) {
-	case "undefined":
-		lua.lua_pushnil(L);
-		break;
-	case "number":
-		lua.lua_pushnumber(L, v);
-		break;
-	case "string":
-		lua.lua_pushstring(L, lua.to_luastring(v));
-		break;
-	case "boolean":
-		lua.lua_pushboolean(L, v);
-		break;
-	case "symbol":
-		lua.lua_pushlightuserdata(L, v);
-		break;
-	case "function":
-		if (lua.lua_isproxy(v, L)) {
-			v(L);
+		case "undefined":
+			lua.lua_pushnil(L);
 			break;
-		}
-		/* fall through */
-	case "object":
-		if (v === null) {
-			/* can't use null in a WeakMap; grab from registry */
-			lua.lua_rawgetp(L, lua.LUA_REGISTRYINDEX, null);
+		case "number":
+			lua.lua_pushnumber(L, v);
 			break;
-		}
-		/* fall through */
-	default:
-		/* Try and push same object again */
-		let objects_seen = states.get(getmainthread(L));
-		let p = objects_seen.get(v);
-		if (p) {
-			p(L);
-		} else {
-			pushjs(L, v);
-			p = lua.lua_toproxy(L, -1);
-			objects_seen.set(v, p);
+		case "string":
+			lua.lua_pushstring(L, lua.to_luastring(v));
+			break;
+		case "boolean":
+			lua.lua_pushboolean(L, v);
+			break;
+		case "symbol":
+			lua.lua_pushlightuserdata(L, v);
+			break;
+		case "function":
+			if (lua.lua_isproxy(v, L)) {
+				v(L);
+				break;
+			}
+			/* fall through */
+		case "object":
+			if (v === null) {
+				/* can't use null in a WeakMap; grab from registry */
+				lua.lua_rawgetp(L, lua.LUA_REGISTRYINDEX, null);
+				break;
+			}
+			/* fall through */
+		default: {
+			/* Try and push same object again */
+			let objects_seen = states.get(getmainthread(L));
+			let p = objects_seen.get(v);
+			if (p) {
+				p(L);
+			} else {
+				pushjs(L, v);
+				p = lua.lua_toproxy(L, -1);
+				objects_seen.set(v, p);
+			}
 		}
 	}
 };
 
 const tojs = function(L, idx) {
 	switch(lua.lua_type(L, idx)) {
-	case lua.LUA_TNONE:
-	case lua.LUA_TNIL:
-		return void 0;
-	case lua.LUA_TBOOLEAN:
-		return lua.lua_toboolean(L, idx);
-	case lua.LUA_TLIGHTUSERDATA:
-		return lua.lua_touserdata(L, idx);
-	case lua.LUA_TNUMBER:
-		return lua.lua_tonumber(L, idx);
-	case lua.LUA_TSTRING:
-		return lua.lua_tojsstring(L, idx);
-	case lua.LUA_TUSERDATA:
-		let u = testjs(L, idx);
-		if (u !== void 0)
-			return u;
+		case lua.LUA_TNONE:
+		case lua.LUA_TNIL:
+			return void 0;
+		case lua.LUA_TBOOLEAN:
+			return lua.lua_toboolean(L, idx);
+		case lua.LUA_TLIGHTUSERDATA:
+			return lua.lua_touserdata(L, idx);
+		case lua.LUA_TNUMBER:
+			return lua.lua_tonumber(L, idx);
+		case lua.LUA_TSTRING:
+			return lua.lua_tojsstring(L, idx);
+		case lua.LUA_TUSERDATA: {
+			let u = testjs(L, idx);
+			if (u !== void 0)
+				return u;
+		}
 		/* fall through */
-	case lua.LUA_TTABLE:
-	case lua.LUA_TFUNCTION:
-	case lua.LUA_TTHREAD:
+		case lua.LUA_TTABLE:
+		case lua.LUA_TFUNCTION:
+		case lua.LUA_TTHREAD:
 		/* fall through */
-	default:
-		return wrap(L, lua.lua_toproxy(L, idx));
+		default:
+			return wrap(L, lua.lua_toproxy(L, idx));
 	}
 };
 
@@ -139,10 +141,10 @@ const jscall = function(L, nargs) {
 	let r = tojs(L, -1);
 	lua.lua_pop(L, 1);
 	switch(status) {
-	case lua.LUA_OK:
-		return r;
-	default:
-		throw r;
+		case lua.LUA_OK:
+			return r;
+		default:
+			throw r;
 	}
 };
 
@@ -158,18 +160,20 @@ const invoke = function(L, p, thisarg, args, n_results) {
 		push(L, args[i]);
 	}
 	switch(lua.lua_pcall(L, 1+args.length, n_results, 0)) {
-	case lua.LUA_OK:
-		let nres = lua.lua_gettop(L)-base;
-		let res = new Array(nres);
-		for (let i=0; i<nres; i++) {
-			res[i] = tojs(L, base+i+1);
+		case lua.LUA_OK: {
+			let nres = lua.lua_gettop(L)-base;
+			let res = new Array(nres);
+			for (let i=0; i<nres; i++) {
+				res[i] = tojs(L, base+i+1);
+			}
+			lua.lua_settop(L, base);
+			return res;
 		}
-		lua.lua_settop(L, base);
-		return res;
-	default:
-		let r = tojs(L, -1);
-		lua.lua_settop(L, base);
-		throw r;
+		default: {
+			let r = tojs(L, -1);
+			lua.lua_settop(L, base);
+			throw r;
+		}
 	}
 };
 
@@ -196,10 +200,10 @@ const has = function(L, p, prop) {
 	let r = lua.lua_isnil(L, -1);
 	lua.lua_pop(L, 1);
 	switch(status) {
-	case lua.LUA_OK:
-		return r;
-	default:
-		throw r;
+		case lua.LUA_OK:
+			return r;
+		default:
+			throw r;
 	}
 };
 
@@ -213,12 +217,13 @@ const set = function(L, p, prop, value) {
 	push(L, prop);
 	push(L, value);
 	switch(lua.lua_pcall(L, 3, 0, 0)) {
-	case lua.LUA_OK:
-		return;
-	default:
-		let r = tojs(L, -1);
-		lua.lua_pop(L, 1);
-		throw r;
+		case lua.LUA_OK:
+			return;
+		default: {
+			let r = tojs(L, -1);
+			lua.lua_pop(L, 1);
+			throw r;
+		}
 	}
 };
 
@@ -232,12 +237,13 @@ const deleteProperty = function(L, p, prop) {
 	push(L, prop);
 	lua.lua_pushnil(L);
 	switch(lua.lua_pcall(L, 3, 0, 0)) {
-	case lua.LUA_OK:
-		return;
-	default:
-		let r = tojs(L, -1);
-		lua.lua_pop(L, 1);
-		throw r;
+		case lua.LUA_OK:
+			return;
+		default: {
+			let r = tojs(L, -1);
+			lua.lua_pop(L, 1);
+			throw r;
+		}
 	}
 };
 
@@ -260,31 +266,33 @@ const iter_next = function() {
 	this.state(L);
 	this.last(L);
 	switch(lua.lua_pcall(L, 2, lua.LUA_MULTRET, 0)) {
-	case lua.LUA_OK:
-		this.last = lua.lua_toproxy(L, top+1);
-		let r;
-		if (lua.lua_isnil(L, -1)) {
-			r = {
-				done: true,
-				value: void 0
-			};
-		} else {
-			let n_results = lua.lua_gettop(L) - top;
-			let result = new Array(n_results);
-			for (let i=0; i<n_results; i++) {
-				result[i] = tojs(L, top+i+1);
+		case lua.LUA_OK: {
+			this.last = lua.lua_toproxy(L, top+1);
+			let r;
+			if (lua.lua_isnil(L, -1)) {
+				r = {
+					done: true,
+					value: void 0
+				};
+			} else {
+				let n_results = lua.lua_gettop(L) - top;
+				let result = new Array(n_results);
+				for (let i=0; i<n_results; i++) {
+					result[i] = tojs(L, top+i+1);
+				}
+				r = {
+					done: false,
+					value: result
+				};
 			}
-			r = {
-				done: false,
-				value: result
-			};
+			lua.lua_settop(L, top);
+			return r;
 		}
-		lua.lua_settop(L, top);
-		return r;
-	default:
-		let e = tojs(L, -1);
-		lua.lua_pop(L, 1);
-		throw e;
+		default: {
+			let e = tojs(L, -1);
+			lua.lua_pop(L, 1);
+			throw e;
+		}
 	}
 };
 
@@ -296,22 +304,24 @@ const jsiterator = function(L, p) {
 	lua.lua_remove(L, -2);
 	p(L);
 	switch(lua.lua_pcall(L, 1, 3, 0)) {
-	case lua.LUA_OK:
-		let iter = lua.lua_toproxy(L, -3);
-		let state = lua.lua_toproxy(L, -2);
-		let last = lua.lua_toproxy(L, -1);
-		lua.lua_pop(L, 3);
-		return {
-			L: L,
-			iter: iter,
-			state: state,
-			last: last,
-			next: iter_next
-		};
-	default:
-		let r = tojs(L, -1);
-		lua.lua_pop(L, 1);
-		throw r;
+		case lua.LUA_OK: {
+			let iter = lua.lua_toproxy(L, -3);
+			let state = lua.lua_toproxy(L, -2);
+			let last = lua.lua_toproxy(L, -1);
+			lua.lua_pop(L, 3);
+			return {
+				L: L,
+				iter: iter,
+				state: state,
+				last: last,
+				next: iter_next
+			};
+		}
+		default: {
+			let r = tojs(L, -1);
+			lua.lua_pop(L, 1);
+			throw r;
+		}
 	}
 };
 
@@ -546,14 +556,14 @@ if (typeof Proxy === "function") {
 		const L = getmainthread(L1);
 		let target;
 		switch (type) {
-		case "function":
-			target = raw_function();
-			break;
-		case "object":
-			target = {};
-			break;
-		default:
-			throw TypeError("invalid type to createproxy");
+			case "function":
+				target = raw_function();
+				break;
+			case "object":
+				target = {};
+				break;
+			default:
+				throw TypeError("invalid type to createproxy");
 		}
 		target[p_symbol] = p;
 		target[L_symbol] = L;
