@@ -12,6 +12,19 @@ if (typeof process !== "undefined") {
 	} catch (e) {}
 }
 
+const global_env = (function() {
+	if (typeof process !== "undefined") {
+		/* node */
+		return global;
+	} else if (typeof window !== "undefined") {
+		/* browser window */
+		return window;
+	} else {
+		/* unknown global env */
+		return eval('this'); /* use non-strict mode to get global env */
+	}
+})();
+
 const apply = Reflect.apply;
 const construct = Reflect.construct;
 const TypedArrayPrototype = Object.getPrototypeOf(new Int8Array());
@@ -704,11 +717,7 @@ const luaopen_js = function(L) {
 	lua.lua_rawsetp(L, lua.LUA_REGISTRYINDEX, null);
 	lua.lua_setfield(L, -2, lua.to_luastring("null"));
 
-	if (typeof process === "undefined") {
-		push(L, window);
-	} else {
-		push(L, global);
-	}
+	push(L, global_env);
 	lua.lua_setfield(L, -2, lua.to_luastring("global"));
 
 	return 1;
