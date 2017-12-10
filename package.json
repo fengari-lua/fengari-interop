@@ -33,7 +33,6 @@
 	"scripts": {
 		"build": "webpack",
 		"lint": "eslint src/ test/",
-		"pretest": "npm run lint",
 		"test": "mocha"
 	},
 	"eslintConfig": {

@@ -1,0 +1,14 @@
+language: node
+
+cache: yarn
+
+install:
+  - yarn
+
+script:
+  - yarn lint
+  - yarn build
+  - yarn test
+
+notifications:
+  email: false
