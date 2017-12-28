@@ -41,11 +41,12 @@ describe("fengari-interop", function() {
 		}
 		jslib.push(L, null);
 		if (lua.lua_pcall(L, 1, 0, 0) !== lua.LUA_OK) {
-			throw lua.lua_tojsstring(L, -1);
+			throw jslib.tojs(L, -1);
 		}
 	});
 
 	it("allows calls with no 'this' or arguments", function() {
+		const jslib = require("../src/jslib.js");
 		const L = new_state(true);
 		if (lauxlib.luaL_loadstring(L, lua.to_luastring(`
 		local js = require "js"
@@ -54,7 +55,7 @@ describe("fengari-interop", function() {
 			throw lua.lua_tojsstring(L, -1);
 		}
 		if (lua.lua_pcall(L, 0, 0, 0) !== lua.LUA_OK) {
-			throw lua.lua_tojsstring(L, -1);
+			throw jslib.tojs(L, -1);
 		}
 	});
 });
