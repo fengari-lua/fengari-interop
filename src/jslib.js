@@ -608,7 +608,7 @@ let jsmt = {
 		let u = checkjs(L, 1);
 		let nargs = lua.lua_gettop(L)-1;
 		let thisarg;
-		let args = new Array(nargs-1);
+		let args = new Array(Math.max(0, nargs-1));
 		if (nargs > 0) {
 			thisarg = tojs(L, 2);
 			if (nargs-- > 0) {

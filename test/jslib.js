@@ -44,4 +44,17 @@ describe("fengari-interop", function() {
 			throw lua.lua_tojsstring(L, -1);
 		}
 	});
+
+	it("allows calls with no 'this' or arguments", function() {
+		const L = new_state(true);
+		if (lauxlib.luaL_loadstring(L, lua.to_luastring(`
+		local js = require "js"
+		js.global.Date.now()
+		`)) !== lua.LUA_OK) {
+			throw lua.lua_tojsstring(L, -1);
+		}
+		if (lua.lua_pcall(L, 0, 0, 0) !== lua.LUA_OK) {
+			throw lua.lua_tojsstring(L, -1);
+		}
+	});
 });
