@@ -43,6 +43,8 @@ for f in js.of(js.global:Array(10,20,30)) do
 end
 ```
 
+*Note: this function only exists if the JavaScript runtime supports [Symbols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol)*
+
 
 ### `createproxy(x[, type])`
 
@@ -66,6 +68,8 @@ Returns if the value `x` is an instance of the class `y` via use of the JavaScri
 
 
 ## Symbols
+
+If the JavaScript environment supports [Symbols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol), then some runtime-wide symbols can be used to customise behaviour:
 
 ### `__pairs`
 

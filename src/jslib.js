@@ -371,44 +371,24 @@ const wrap = function(L1, p) {
 	js_proxy.toString = function() {
 		return tostring(L, p);
 	};
-	js_proxy[Symbol.toStringTag] = "Fengari object";
-	js_proxy[Symbol.iterator] = function() {
-		return jsiterator(L, p);
-	};
-	if (Symbol.toPrimitive) {
-		js_proxy[Symbol.toPrimitive] = function(hint) {
-			if (hint === "string") {
-				return tostring(L, p);
-			}
+	if (typeof Symbol === "function") {
+		js_proxy[Symbol.toStringTag] = "Fengari object";
+		js_proxy[Symbol.iterator] = function() {
+			return jsiterator(L, p);
 		};
+		if (Symbol.toPrimitive) {
+			js_proxy[Symbol.toPrimitive] = function(hint) {
+				if (hint === "string") {
+					return tostring(L, p);
+				}
+			};
+		}
 	}
 	if (custom_inspect_symbol) {
 		js_proxy[custom_inspect_symbol] = js_proxy.toString;
 	}
 	states.get(L).set(js_proxy, p);
 	return js_proxy;
-};
-
-const get_iterator = function(L, idx) {
-	let u = checkjs(L, idx);
-	let getiter = u[Symbol.iterator];
-	if (!getiter)
-		lauxlib.luaL_argerror(L, idx, lua.to_luastring("object not iterable"));
-	let iter = apply(getiter, u, []);
-	if (!isobject(iter))
-		lauxlib.luaL_argerror(L, idx, lua.to_luastring("Result of the Symbol.iterator method is not an object"));
-	return iter;
-};
-
-const next = function(L) {
-	let iter = tojs(L, 1);
-	let r = iter.next();
-	if (r.done) {
-		return 0;
-	} else {
-		push(L, r.value);
-		return 1;
-	}
 };
 
 const jslib = {
@@ -421,12 +401,6 @@ const jslib = {
 		}
 		push(L, construct(u, args));
 		return 1;
-	},
-	"of": function(L) {
-		let iter = get_iterator(L, 1);
-		lua.lua_pushcfunction(L, next);
-		push(L, iter);
-		return 2;
 	},
 	"tonumber": function(L) {
 		let u = tojs(L, 1);
@@ -441,7 +415,38 @@ const jslib = {
 	}
 };
 
-if (typeof Proxy === "function") {
+if (typeof Symbol === "function" && Symbol.iterator) {
+	const get_iterator = function(L, idx) {
+		let u = checkjs(L, idx);
+		let getiter = u[Symbol.iterator];
+		if (!getiter)
+			lauxlib.luaL_argerror(L, idx, lua.to_luastring("object not iterable"));
+		let iter = apply(getiter, u, []);
+		if (!isobject(iter))
+			lauxlib.luaL_argerror(L, idx, lua.to_luastring("Result of the Symbol.iterator method is not an object"));
+		return iter;
+	};
+
+	const next = function(L) {
+		let iter = tojs(L, 1);
+		let r = iter.next();
+		if (r.done) {
+			return 0;
+		} else {
+			push(L, r.value);
+			return 1;
+		}
+	};
+
+	jslib["of"] = function(L) {
+		let iter = get_iterator(L, 1);
+		lua.lua_pushcfunction(L, next);
+		push(L, iter);
+		return 2;
+	};
+}
+
+if (typeof Proxy === "function" && typeof Symbol === "function") {
 	const L_symbol = Symbol("lua_State");
 	const p_symbol = Symbol("fengari-proxy");
 
@@ -639,8 +644,8 @@ let jsmt = {
 	},
 	"__pairs": function(L) {
 		let u = checkjs(L, 1);
-		let f = u[Symbol.for("__pairs")];
-		if (f === void 0)
+		let f;
+		if (typeof Symbol !== "function" || (f = u[Symbol.for("__pairs")]) === void 0)
 			lauxlib.luaL_argerror(L, 1, lua.to_luastring("js object has no __pairs Symbol"));
 		let r = apply(f, u, []);
 		if (r === void 0)
@@ -670,8 +675,8 @@ let jsmt = {
 	},
 	"__len": function(L) {
 		let u = checkjs(L, 1);
-		let f = u[Symbol.for("__len")];
-		if (f === void 0)
+		let f;
+		if (typeof Symbol !== "function" || (f = u[Symbol.for("__len")]) === void 0)
 			lauxlib.luaL_argerror(L, 1, lua.to_luastring("js object has no __len Symbol"));
 		let r = apply(f, u, []);
 		push(L, r);
@@ -679,29 +684,31 @@ let jsmt = {
 	}
 };
 
-/* Create __pairs for all objects that inherit from Object */
-Object.prototype[Symbol.for("__pairs")] = function() {
-	return {
-		"iter": function(last) {
-			if (this.index >= this.keys.length)
-				return;
-			let key = this.keys[this.index++];
-			return [key, this.object[key]];
-		},
-		"state": {
-			object: this,
-			keys: Object.keys(this),
-			index: 0,
-		}
+if (typeof Symbol === "function") {
+	/* Create __pairs for all objects that inherit from Object */
+	Object.prototype[Symbol.for("__pairs")] = function() {
+		return {
+			"iter": function(last) {
+				if (this.index >= this.keys.length)
+					return;
+				let key = this.keys[this.index++];
+				return [key, this.object[key]];
+			},
+			"state": {
+				object: this,
+				keys: Object.keys(this),
+				index: 0,
+			}
+		};
 	};
-};
 
-/* Create __len for all objects that inherit from Array */
-const __len = function() {
-	return this.length;
-};
-Array.prototype[Symbol.for("__len")] = __len;
-TypedArrayPrototype[Symbol.for("__len")] = __len;
+	/* Create __len for all objects that inherit from Array */
+	const __len = function() {
+		return this.length;
+	};
+	Array.prototype[Symbol.for("__len")] = __len;
+	TypedArrayPrototype[Symbol.for("__len")] = __len;
+}
 
 const luaopen_js = function(L) {
 	/* Add weak map to track objects seen */
