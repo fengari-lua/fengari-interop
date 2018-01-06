@@ -53,8 +53,6 @@ if (typeof Reflect !== "undefined") {
 	};
 }
 
-const TypedArrayPrototype = Object.getPrototypeOf(new Int8Array());
-
 const toString = function(o) {
 	return ""+o;
 };
@@ -729,7 +727,21 @@ if (typeof Symbol === "function") {
 		return this.length;
 	};
 	Array.prototype[Symbol.for("__len")] = __len;
-	TypedArrayPrototype[Symbol.for("__len")] = __len;
+
+	/* Add __len to each TypedArrayPrototype */
+	[
+		Int8Array,
+		Uint8Array,
+		Uint8ClampedArray,
+		Int16Array,
+		Uint16Array,
+		Int32Array,
+		Uint32Array,
+		Float32Array,
+		Float64Array
+	].forEach(function(c) {
+		Object.getPrototypeOf(new c())[Symbol.for("__len")] = __len;
+	});
 }
 
 const luaopen_js = function(L) {
