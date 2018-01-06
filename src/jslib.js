@@ -29,8 +29,30 @@ const global_env = (function() {
 	}
 })();
 
-const apply = Reflect.apply;
-const construct = Reflect.construct;
+let apply, construct;
+if (typeof Reflect !== "undefined") {
+	apply = Reflect.apply;
+	construct = Reflect.construct;
+} else {
+	const fApply = Function.apply;
+	const bind = Function.bind;
+	apply = function(target, thisArgument, argumentsList) {
+		return fApply.call(target, thisArgument, argumentsList);
+	};
+	construct = function(target, argumentsList /*, newTarget */) {
+		switch (argumentsList.length) {
+			case 0: return new target();
+			case 1: return new target(argumentsList[0]);
+			case 2: return new target(argumentsList[0], argumentsList[1]);
+			case 3: return new target(argumentsList[0], argumentsList[1], argumentsList[2]);
+			case 4: return new target(argumentsList[0], argumentsList[1], argumentsList[2], argumentsList[3]);
+		}
+		let args = [null];
+		args.push.apply(args, argumentsList);
+		return new (bind.apply(target, args))();
+	};
+}
+
 const TypedArrayPrototype = Object.getPrototypeOf(new Int8Array());
 
 const toString = function(o) {
