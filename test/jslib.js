@@ -30,7 +30,7 @@ describe("fengari-interop", function() {
 
 	it("pushes same null every time", function() {
 		const jslib = require("../src/jslib.js");
-		const L = new_state(true);
+		const L = new_state();
 		if (lauxlib.luaL_loadstring(L, lua.to_luastring(`
 		local null = ...
 		local js = require "js"
@@ -47,7 +47,7 @@ describe("fengari-interop", function() {
 
 	it("allows calls with no 'this' or arguments", function() {
 		const jslib = require("../src/jslib.js");
-		const L = new_state(true);
+		const L = new_state();
 		if (lauxlib.luaL_loadstring(L, lua.to_luastring(`
 		local js = require "js"
 		js.global.Date.now()
