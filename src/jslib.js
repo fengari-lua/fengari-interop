@@ -91,12 +91,6 @@ const getmainthread = function(L) {
 /* weak map from states to proxy objects (for each object) in that state */
 const states = new WeakMap();
 
-const atnativeerror = function(L) {
-	let u = lua.lua_touserdata(L, 1);
-	push(L, u);
-	return 1;
-};
-
 const push = function(L, v) {
 	switch (typeof v) {
 		case "undefined":
@@ -140,6 +134,12 @@ const push = function(L, v) {
 			}
 		}
 	}
+};
+
+const atnativeerror = function(L) {
+	let u = lua.lua_touserdata(L, 1);
+	push(L, u);
+	return 1;
 };
 
 const tojs = function(L, idx) {
