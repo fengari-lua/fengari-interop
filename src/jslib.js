@@ -186,7 +186,7 @@ const jscall = function(L, nargs) {
 };
 
 const invoke = function(L, p, thisarg, args, n_results) {
-	lauxlib.luaL_checkstack(L, 2+args.length);
+	lauxlib.luaL_checkstack(L, 2+args.length, null);
 	if ((n_results === void 0) || (n_results === null)) {
 		n_results = lua.LUA_MULTRET;
 	}
@@ -220,7 +220,7 @@ const gettable = function(L) {
 };
 
 const get = function(L, p, prop) {
-	lauxlib.luaL_checkstack(L, 3);
+	lauxlib.luaL_checkstack(L, 3, null);
 	lua.lua_pushcfunction(L, gettable);
 	p(L);
 	push(L, prop);
@@ -228,7 +228,7 @@ const get = function(L, p, prop) {
 };
 
 const has = function(L, p, prop) {
-	lauxlib.luaL_checkstack(L, 3);
+	lauxlib.luaL_checkstack(L, 3, null);
 	lua.lua_pushcfunction(L, gettable);
 	p(L);
 	push(L, prop);
@@ -248,7 +248,7 @@ const has = function(L, p, prop) {
 };
 
 const set = function(L, p, prop, value) {
-	lauxlib.luaL_checkstack(L, 4);
+	lauxlib.luaL_checkstack(L, 4, null);
 	lua.lua_pushcfunction(L, function(L) {
 		lua.lua_settable(L, 1);
 		return 0;
@@ -268,7 +268,7 @@ const set = function(L, p, prop, value) {
 };
 
 const deleteProperty = function(L, p, prop) {
-	lauxlib.luaL_checkstack(L, 4);
+	lauxlib.luaL_checkstack(L, 4, null);
 	lua.lua_pushcfunction(L, function(L) {
 		lua.lua_settable(L, 1);
 		return 0;
@@ -288,7 +288,7 @@ const deleteProperty = function(L, p, prop) {
 };
 
 const tostring = function(L, p) {
-	lauxlib.luaL_checkstack(L, 2);
+	lauxlib.luaL_checkstack(L, 2, null);
 	lua.lua_pushcfunction(L, function(L) {
 		lauxlib.luaL_tolstring(L, 1);
 		return 1;
@@ -300,7 +300,7 @@ const tostring = function(L, p) {
 /* implements lua's "Generic For" protocol */
 const iter_next = function() {
 	let L = this.L;
-	lauxlib.luaL_checkstack(L, 3);
+	lauxlib.luaL_checkstack(L, 3, null);
 	let top = lua.lua_gettop(L);
 	this.iter(L);
 	this.state(L);
@@ -338,7 +338,7 @@ const iter_next = function() {
 
 /* make iteration use pairs() */
 const jsiterator = function(L, p) {
-	lauxlib.luaL_checkstack(this.L, 2);
+	lauxlib.luaL_checkstack(this.L, 2, null);
 	lauxlib.luaL_requiref(L, lua.to_luastring("_G"), lualib.luaopen_base, 0);
 	lua.lua_getfield(L, -1, lua.to_luastring("pairs"));
 	lua.lua_remove(L, -2);
@@ -481,7 +481,7 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 			let L = target[L_symbol];
 			let p = target[p_symbol];
 			let arg_length = argumentsList.length;
-			lauxlib.luaL_checkstack(L, 2+arg_length);
+			lauxlib.luaL_checkstack(L, 2+arg_length, null);
 			p(L);
 			let idx = lua.lua_gettop(L);
 			if (lauxlib.luaL_getmetafield(L, idx, lua.to_luastring("construct")) === lua.LUA_TNIL) {
@@ -497,7 +497,7 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 		"defineProperty": function(target, prop, desc) {
 			let L = target[L_symbol];
 			let p = target[p_symbol];
-			lauxlib.luaL_checkstack(L, 4);
+			lauxlib.luaL_checkstack(L, 4, null);
 			p(L);
 			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("defineProperty")) === lua.LUA_TNIL) {
 				lua.lua_pop(L, 1);
@@ -517,7 +517,7 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 		"getOwnPropertyDescriptor": function(target, prop) {
 			let L = target[L_symbol];
 			let p = target[p_symbol];
-			lauxlib.luaL_checkstack(L, 3);
+			lauxlib.luaL_checkstack(L, 3, null);
 			p(L);
 			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("getOwnPropertyDescriptor")) === lua.LUA_TNIL) {
 				lua.lua_pop(L, 1);
@@ -530,7 +530,7 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 		"getPrototypeOf": function(target) {
 			let L = target[L_symbol];
 			let p = target[p_symbol];
-			lauxlib.luaL_checkstack(L, 2);
+			lauxlib.luaL_checkstack(L, 2, null);
 			p(L);
 			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("getPrototypeOf")) === lua.LUA_TNIL) {
 				lua.lua_pop(L, 1);
@@ -545,7 +545,7 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 		"ownKeys": function(target) {
 			let L = target[L_symbol];
 			let p = target[p_symbol];
-			lauxlib.luaL_checkstack(L, 2);
+			lauxlib.luaL_checkstack(L, 2, null);
 			p(L);
 			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("ownKeys")) === lua.LUA_TNIL) {
 				lua.lua_pop(L, 1);
@@ -560,7 +560,7 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 		"setPrototypeOf": function(target, prototype) {
 			let L = target[L_symbol];
 			let p = target[p_symbol];
-			lauxlib.luaL_checkstack(L, 3);
+			lauxlib.luaL_checkstack(L, 3, null);
 			p(L);
 			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("setPrototypeOf")) === lua.LUA_TNIL) {
 				lua.lua_pop(L, 1);
@@ -686,7 +686,7 @@ let jsmt = {
 			/* otherwise it should return an array of results */
 			if (!Array.isArray(r))
 				lauxlib.luaL_error(L, lua.to_luastring("bad iterator result (Array or undefined expected)"));
-			lauxlib.luaL_checkstack(L, r.length);
+			lauxlib.luaL_checkstack(L, r.length, null);
 			for (let i=0; i<r.length; i++) {
 				push(L, r[i]);
 			}
