@@ -117,13 +117,15 @@ const push = function(L, v) {
 		case "object":
 			if (v === null) {
 				/* can't use null in a WeakMap; grab from registry */
-				lua.lua_rawgetp(L, lua.LUA_REGISTRYINDEX, null);
+				if (lua.lua_rawgetp(L, lua.LUA_REGISTRYINDEX, null) !== lua.LUA_TUSERDATA)
+					throw Error("js library not loaded into lua_State");
 				break;
 			}
 			/* fall through */
 		default: {
 			/* Try and push same object again */
 			let objects_seen = states.get(getmainthread(L));
+			if (!objects_seen) throw Error("js library not loaded into lua_State");
 			let p = objects_seen.get(v);
 			if (p) {
 				p(L);
