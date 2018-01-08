@@ -214,12 +214,14 @@ const invoke = function(L, p, thisarg, args, n_results) {
 	}
 };
 
+const gettable = function(L) {
+	lua.lua_gettable(L, 1);
+	return 1;
+};
+
 const get = function(L, p, prop) {
 	lauxlib.luaL_checkstack(L, 3);
-	lua.lua_pushcfunction(L, function(L) {
-		lua.lua_gettable(L, 1);
-		return 1;
-	});
+	lua.lua_pushcfunction(L, gettable);
 	p(L);
 	push(L, prop);
 	return jscall(L, 2);
@@ -227,20 +229,21 @@ const get = function(L, p, prop) {
 
 const has = function(L, p, prop) {
 	lauxlib.luaL_checkstack(L, 3);
-	lua.lua_pushcfunction(L, function(L) {
-		lua.lua_gettable(L, 1);
-		return 1;
-	});
+	lua.lua_pushcfunction(L, gettable);
 	p(L);
 	push(L, prop);
 	let status = lua.lua_pcall(L, 2, 1, 0);
-	let r = lua.lua_isnil(L, -1);
-	lua.lua_pop(L, 1);
 	switch(status) {
-		case lua.LUA_OK:
-			return r;
-		default:
+		case lua.LUA_OK: {
+			let r = lua.lua_isnil(L, -1);
+			lua.lua_pop(L, 1);
+			return !r;
+		}
+		default: {
+			let r = tojs(L, -1);
+			lua.lua_pop(L, 1);
 			throw r;
+		}
 	}
 };
 
