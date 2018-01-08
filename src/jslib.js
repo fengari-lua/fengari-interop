@@ -435,6 +435,11 @@ const jslib = {
 		let u2 = tojs(L, 2);
 		lua.lua_pushboolean(L, u1 instanceof u2);
 		return 1;
+	},
+	"typeof": function(L) {
+		let u = tojs(L, 1);
+		lua.lua_pushliteral(L, typeof u);
+		return 1;
 	}
 };
 

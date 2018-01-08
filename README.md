@@ -67,6 +67,11 @@ Coerces the value `x` to a number using JavaScript coercion rules.
 Returns if the value `x` is an instance of the class `y` via use of the JavaScript [`instanceof` operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof)
 
 
+### `typeof(x)`
+
+Returns what JavaScript sees as the type of `x`. Uses the JavaScript [`typeof` operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof)
+
+
 ## Symbols
 
 If the JavaScript environment supports [Symbols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol), then some runtime-wide symbols can be used to customise behaviour:
