@@ -412,7 +412,9 @@ const wrap = function(L1, p) {
 	if (custom_inspect_symbol) {
 		js_proxy[custom_inspect_symbol] = js_proxy.toString;
 	}
-	states.get(L).set(js_proxy, p);
+	let objects_seen = states.get(L);
+	if (!objects_seen) throw Error("js library not loaded into lua_State");
+	objects_seen.set(js_proxy, p);
 	return js_proxy;
 };
 
