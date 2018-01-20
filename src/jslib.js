@@ -1,9 +1,78 @@
 "use strict";
 
-const fengari = require('fengari');
-const lua     = fengari.lua;
-const lauxlib = fengari.lauxlib;
-const lualib  = fengari.lualib;
+const {
+	lua,
+	lauxlib,
+	lualib,
+	to_luastring
+} = require('fengari');
+const {
+	LUA_MULTRET,
+	LUA_OK,
+	LUA_REGISTRYINDEX,
+	LUA_RIDX_MAINTHREAD,
+	LUA_TBOOLEAN,
+	LUA_TFUNCTION,
+	LUA_TLIGHTUSERDATA,
+	LUA_TNIL,
+	LUA_TNONE,
+	LUA_TNUMBER,
+	LUA_TSTRING,
+	LUA_TTABLE,
+	LUA_TTHREAD,
+	LUA_TUSERDATA,
+	lua_atnativeerror,
+	lua_getfield,
+	lua_gettable,
+	lua_gettop,
+	lua_isnil,
+	lua_isproxy,
+	lua_newuserdata,
+	lua_pcall,
+	lua_pop,
+	lua_pushboolean,
+	lua_pushcfunction,
+	lua_pushlightuserdata,
+	lua_pushliteral,
+	lua_pushnil,
+	lua_pushnumber,
+	lua_pushstring,
+	lua_pushvalue,
+	lua_rawgeti,
+	lua_rawgetp,
+	lua_rawsetp,
+	lua_remove,
+	lua_rotate,
+	lua_setfield,
+	lua_settable,
+	lua_settop,
+	lua_toboolean,
+	lua_tojsstring,
+	lua_tonumber,
+	lua_toproxy,
+	lua_tothread,
+	lua_touserdata,
+	lua_type
+} = lua;
+const {
+	luaL_argerror,
+	luaL_checkany,
+	luaL_checkoption,
+	luaL_checkstack,
+	luaL_checkudata,
+	luaL_error,
+	luaL_getmetafield,
+	luaL_newlib,
+	luaL_newmetatable,
+	luaL_requiref,
+	luaL_setfuncs,
+	luaL_setmetatable,
+	luaL_testudata,
+	luaL_tolstring
+} = lauxlib;
+const {
+	luaopen_base
+} = lualib;
 
 let custom_inspect_symbol;
 if (typeof process !== "undefined") {
@@ -61,10 +130,10 @@ const isobject = function(o) {
 	return typeof o === "object" ? o !== null : typeof o === "function";
 };
 
-const js_tname = lua.to_luastring("js object");
+const js_tname = to_luastring("js object");
 
 const testjs = function(L, idx) {
-	let u = lauxlib.luaL_testudata(L, idx, js_tname);
+	let u = luaL_testudata(L, idx, js_tname);
 	if (u)
 		return u.data;
 	else
@@ -72,19 +141,19 @@ const testjs = function(L, idx) {
 };
 
 const checkjs = function(L, idx) {
-	return lauxlib.luaL_checkudata(L, idx, js_tname).data;
+	return luaL_checkudata(L, idx, js_tname).data;
 };
 
 const pushjs = function(L, v) {
-	let b = lua.lua_newuserdata(L);
+	let b = lua_newuserdata(L);
 	b.data = v;
-	lauxlib.luaL_setmetatable(L, js_tname);
+	luaL_setmetatable(L, js_tname);
 };
 
 const getmainthread = function(L) {
-	lua.lua_rawgeti(L, lua.LUA_REGISTRYINDEX, lua.LUA_RIDX_MAINTHREAD);
-	let mainL = lua.lua_tothread(L, -1);
-	lua.lua_pop(L, 1);
+	lua_rawgeti(L, LUA_REGISTRYINDEX, LUA_RIDX_MAINTHREAD);
+	let mainL = lua_tothread(L, -1);
+	lua_pop(L, 1);
 	return mainL;
 };
 
@@ -94,22 +163,22 @@ const states = new WeakMap();
 const push = function(L, v) {
 	switch (typeof v) {
 		case "undefined":
-			lua.lua_pushnil(L);
+			lua_pushnil(L);
 			break;
 		case "number":
-			lua.lua_pushnumber(L, v);
+			lua_pushnumber(L, v);
 			break;
 		case "string":
-			lua.lua_pushstring(L, lua.to_luastring(v));
+			lua_pushstring(L, to_luastring(v));
 			break;
 		case "boolean":
-			lua.lua_pushboolean(L, v);
+			lua_pushboolean(L, v);
 			break;
 		case "symbol":
-			lua.lua_pushlightuserdata(L, v);
+			lua_pushlightuserdata(L, v);
 			break;
 		case "function":
-			if (lua.lua_isproxy(v, L)) {
+			if (lua_isproxy(v, L)) {
 				v(L);
 				break;
 			}
@@ -117,7 +186,7 @@ const push = function(L, v) {
 		case "object":
 			if (v === null) {
 				/* can't use null in a WeakMap; grab from registry */
-				if (lua.lua_rawgetp(L, lua.LUA_REGISTRYINDEX, null) !== lua.LUA_TUSERDATA)
+				if (lua_rawgetp(L, LUA_REGISTRYINDEX, null) !== LUA_TUSERDATA)
 					throw Error("js library not loaded into lua_State");
 				break;
 			}
@@ -131,7 +200,7 @@ const push = function(L, v) {
 				p(L);
 			} else {
 				pushjs(L, v);
-				p = lua.lua_toproxy(L, -1);
+				p = lua_toproxy(L, -1);
 				objects_seen.set(v, p);
 			}
 		}
@@ -139,36 +208,36 @@ const push = function(L, v) {
 };
 
 const atnativeerror = function(L) {
-	let u = lua.lua_touserdata(L, 1);
+	let u = lua_touserdata(L, 1);
 	push(L, u);
 	return 1;
 };
 
 const tojs = function(L, idx) {
-	switch(lua.lua_type(L, idx)) {
-		case lua.LUA_TNONE:
-		case lua.LUA_TNIL:
+	switch(lua_type(L, idx)) {
+		case LUA_TNONE:
+		case LUA_TNIL:
 			return void 0;
-		case lua.LUA_TBOOLEAN:
-			return lua.lua_toboolean(L, idx);
-		case lua.LUA_TLIGHTUSERDATA:
-			return lua.lua_touserdata(L, idx);
-		case lua.LUA_TNUMBER:
-			return lua.lua_tonumber(L, idx);
-		case lua.LUA_TSTRING:
-			return lua.lua_tojsstring(L, idx);
-		case lua.LUA_TUSERDATA: {
+		case LUA_TBOOLEAN:
+			return lua_toboolean(L, idx);
+		case LUA_TLIGHTUSERDATA:
+			return lua_touserdata(L, idx);
+		case LUA_TNUMBER:
+			return lua_tonumber(L, idx);
+		case LUA_TSTRING:
+			return lua_tojsstring(L, idx);
+		case LUA_TUSERDATA: {
 			let u = testjs(L, idx);
 			if (u !== void 0)
 				return u;
 		}
 		/* fall through */
-		case lua.LUA_TTABLE:
-		case lua.LUA_TFUNCTION:
-		case lua.LUA_TTHREAD:
+		case LUA_TTABLE:
+		case LUA_TFUNCTION:
+		case LUA_TTHREAD:
 		/* fall through */
 		default:
-			return wrap(L, lua.lua_toproxy(L, idx));
+			return wrap(L, lua_toproxy(L, idx));
 	}
 };
 
@@ -176,11 +245,11 @@ const tojs = function(L, idx) {
    On lua error, re-throws as javascript error
    On success, returns single return value */
 const jscall = function(L, nargs) {
-	let status = lua.lua_pcall(L, nargs, 1, 0);
+	let status = lua_pcall(L, nargs, 1, 0);
 	let r = tojs(L, -1);
-	lua.lua_pop(L, 1);
+	lua_pop(L, 1);
 	switch(status) {
-		case lua.LUA_OK:
+		case LUA_OK:
 			return r;
 		default:
 			throw r;
@@ -188,111 +257,111 @@ const jscall = function(L, nargs) {
 };
 
 const invoke = function(L, p, thisarg, args, n_results) {
-	lauxlib.luaL_checkstack(L, 2+args.length, null);
+	luaL_checkstack(L, 2+args.length, null);
 	if ((n_results === void 0) || (n_results === null)) {
-		n_results = lua.LUA_MULTRET;
+		n_results = LUA_MULTRET;
 	}
-	let base = lua.lua_gettop(L);
+	let base = lua_gettop(L);
 	p(L);
 	push(L, thisarg);
 	for (let i=0; i<args.length; i++) {
 		push(L, args[i]);
 	}
-	switch(lua.lua_pcall(L, 1+args.length, n_results, 0)) {
-		case lua.LUA_OK: {
-			let nres = lua.lua_gettop(L)-base;
+	switch(lua_pcall(L, 1+args.length, n_results, 0)) {
+		case LUA_OK: {
+			let nres = lua_gettop(L)-base;
 			let res = new Array(nres);
 			for (let i=0; i<nres; i++) {
 				res[i] = tojs(L, base+i+1);
 			}
-			lua.lua_settop(L, base);
+			lua_settop(L, base);
 			return res;
 		}
 		default: {
 			let r = tojs(L, -1);
-			lua.lua_settop(L, base);
+			lua_settop(L, base);
 			throw r;
 		}
 	}
 };
 
 const gettable = function(L) {
-	lua.lua_gettable(L, 1);
+	lua_gettable(L, 1);
 	return 1;
 };
 
 const get = function(L, p, prop) {
-	lauxlib.luaL_checkstack(L, 3, null);
-	lua.lua_pushcfunction(L, gettable);
+	luaL_checkstack(L, 3, null);
+	lua_pushcfunction(L, gettable);
 	p(L);
 	push(L, prop);
 	return jscall(L, 2);
 };
 
 const has = function(L, p, prop) {
-	lauxlib.luaL_checkstack(L, 3, null);
-	lua.lua_pushcfunction(L, gettable);
+	luaL_checkstack(L, 3, null);
+	lua_pushcfunction(L, gettable);
 	p(L);
 	push(L, prop);
-	let status = lua.lua_pcall(L, 2, 1, 0);
+	let status = lua_pcall(L, 2, 1, 0);
 	switch(status) {
-		case lua.LUA_OK: {
-			let r = lua.lua_isnil(L, -1);
-			lua.lua_pop(L, 1);
+		case LUA_OK: {
+			let r = lua_isnil(L, -1);
+			lua_pop(L, 1);
 			return !r;
 		}
 		default: {
 			let r = tojs(L, -1);
-			lua.lua_pop(L, 1);
+			lua_pop(L, 1);
 			throw r;
 		}
 	}
 };
 
 const set = function(L, p, prop, value) {
-	lauxlib.luaL_checkstack(L, 4, null);
-	lua.lua_pushcfunction(L, function(L) {
-		lua.lua_settable(L, 1);
+	luaL_checkstack(L, 4, null);
+	lua_pushcfunction(L, function(L) {
+		lua_settable(L, 1);
 		return 0;
 	});
 	p(L);
 	push(L, prop);
 	push(L, value);
-	switch(lua.lua_pcall(L, 3, 0, 0)) {
-		case lua.LUA_OK:
+	switch(lua_pcall(L, 3, 0, 0)) {
+		case LUA_OK:
 			return;
 		default: {
 			let r = tojs(L, -1);
-			lua.lua_pop(L, 1);
+			lua_pop(L, 1);
 			throw r;
 		}
 	}
 };
 
 const deleteProperty = function(L, p, prop) {
-	lauxlib.luaL_checkstack(L, 4, null);
-	lua.lua_pushcfunction(L, function(L) {
-		lua.lua_settable(L, 1);
+	luaL_checkstack(L, 4, null);
+	lua_pushcfunction(L, function(L) {
+		lua_settable(L, 1);
 		return 0;
 	});
 	p(L);
 	push(L, prop);
-	lua.lua_pushnil(L);
-	switch(lua.lua_pcall(L, 3, 0, 0)) {
-		case lua.LUA_OK:
+	lua_pushnil(L);
+	switch(lua_pcall(L, 3, 0, 0)) {
+		case LUA_OK:
 			return;
 		default: {
 			let r = tojs(L, -1);
-			lua.lua_pop(L, 1);
+			lua_pop(L, 1);
 			throw r;
 		}
 	}
 };
 
 const tostring = function(L, p) {
-	lauxlib.luaL_checkstack(L, 2, null);
-	lua.lua_pushcfunction(L, function(L) {
-		lauxlib.luaL_tolstring(L, 1);
+	luaL_checkstack(L, 2, null);
+	lua_pushcfunction(L, function(L) {
+		luaL_tolstring(L, 1);
 		return 1;
 	});
 	p(L);
@@ -302,22 +371,22 @@ const tostring = function(L, p) {
 /* implements lua's "Generic For" protocol */
 const iter_next = function() {
 	let L = this.L;
-	lauxlib.luaL_checkstack(L, 3, null);
-	let top = lua.lua_gettop(L);
+	luaL_checkstack(L, 3, null);
+	let top = lua_gettop(L);
 	this.iter(L);
 	this.state(L);
 	this.last(L);
-	switch(lua.lua_pcall(L, 2, lua.LUA_MULTRET, 0)) {
-		case lua.LUA_OK: {
-			this.last = lua.lua_toproxy(L, top+1);
+	switch(lua_pcall(L, 2, LUA_MULTRET, 0)) {
+		case LUA_OK: {
+			this.last = lua_toproxy(L, top+1);
 			let r;
-			if (lua.lua_isnil(L, -1)) {
+			if (lua_isnil(L, -1)) {
 				r = {
 					done: true,
 					value: void 0
 				};
 			} else {
-				let n_results = lua.lua_gettop(L) - top;
+				let n_results = lua_gettop(L) - top;
 				let result = new Array(n_results);
 				for (let i=0; i<n_results; i++) {
 					result[i] = tojs(L, top+i+1);
@@ -327,12 +396,12 @@ const iter_next = function() {
 					value: result
 				};
 			}
-			lua.lua_settop(L, top);
+			lua_settop(L, top);
 			return r;
 		}
 		default: {
 			let e = tojs(L, -1);
-			lua.lua_pop(L, 1);
+			lua_pop(L, 1);
 			throw e;
 		}
 	}
@@ -340,17 +409,17 @@ const iter_next = function() {
 
 /* make iteration use pairs() */
 const jsiterator = function(L, p) {
-	lauxlib.luaL_checkstack(this.L, 2, null);
-	lauxlib.luaL_requiref(L, lua.to_luastring("_G"), lualib.luaopen_base, 0);
-	lua.lua_getfield(L, -1, lua.to_luastring("pairs"));
-	lua.lua_remove(L, -2);
+	luaL_checkstack(this.L, 2, null);
+	luaL_requiref(L, to_luastring("_G"), luaopen_base, 0);
+	lua_getfield(L, -1, to_luastring("pairs"));
+	lua_remove(L, -2);
 	p(L);
-	switch(lua.lua_pcall(L, 1, 3, 0)) {
-		case lua.LUA_OK: {
-			let iter = lua.lua_toproxy(L, -3);
-			let state = lua.lua_toproxy(L, -2);
-			let last = lua.lua_toproxy(L, -1);
-			lua.lua_pop(L, 3);
+	switch(lua_pcall(L, 1, 3, 0)) {
+		case LUA_OK: {
+			let iter = lua_toproxy(L, -3);
+			let state = lua_toproxy(L, -2);
+			let last = lua_toproxy(L, -1);
+			lua_pop(L, 3);
 			return {
 				L: L,
 				iter: iter,
@@ -361,7 +430,7 @@ const jsiterator = function(L, p) {
 		}
 		default: {
 			let r = tojs(L, -1);
-			lua.lua_pop(L, 1);
+			lua_pop(L, 1);
 			throw r;
 		}
 	}
@@ -379,7 +448,7 @@ const wrap = function(L1, p) {
 		return invoke(L, p, thisarg, args, 1)[0];
 	};
 	js_proxy.invoke = function(thisarg, args) {
-		return invoke(L, p, thisarg, args, lua.LUA_MULTRET);
+		return invoke(L, p, thisarg, args, LUA_MULTRET);
 	};
 	js_proxy.get = function(k) {
 		return get(L, p, k);
@@ -421,7 +490,7 @@ const wrap = function(L1, p) {
 const jslib = {
 	"new": function(L) {
 		let u = tojs(L, 1);
-		let nargs = lua.lua_gettop(L)-1;
+		let nargs = lua_gettop(L)-1;
 		let args = new Array(nargs);
 		for (let i = 0; i < nargs; i++) {
 			args[i] = tojs(L, i+2);
@@ -431,18 +500,18 @@ const jslib = {
 	},
 	"tonumber": function(L) {
 		let u = tojs(L, 1);
-		lua.lua_pushnumber(L, +u);
+		lua_pushnumber(L, +u);
 		return 1;
 	},
 	"instanceof": function(L) {
 		let u1 = tojs(L, 1);
 		let u2 = tojs(L, 2);
-		lua.lua_pushboolean(L, u1 instanceof u2);
+		lua_pushboolean(L, u1 instanceof u2);
 		return 1;
 	},
 	"typeof": function(L) {
 		let u = tojs(L, 1);
-		lua.lua_pushliteral(L, typeof u);
+		lua_pushliteral(L, typeof u);
 		return 1;
 	}
 };
@@ -452,10 +521,10 @@ if (typeof Symbol === "function" && Symbol.iterator) {
 		let u = checkjs(L, idx);
 		let getiter = u[Symbol.iterator];
 		if (!getiter)
-			lauxlib.luaL_argerror(L, idx, lua.to_luastring("object not iterable"));
+			luaL_argerror(L, idx, to_luastring("object not iterable"));
 		let iter = apply(getiter, u, []);
 		if (!isobject(iter))
-			lauxlib.luaL_argerror(L, idx, lua.to_luastring("Result of the Symbol.iterator method is not an object"));
+			luaL_argerror(L, idx, to_luastring("Result of the Symbol.iterator method is not an object"));
 		return iter;
 	};
 
@@ -472,7 +541,7 @@ if (typeof Symbol === "function" && Symbol.iterator) {
 
 	jslib["of"] = function(L) {
 		let iter = get_iterator(L, 1);
-		lua.lua_pushcfunction(L, next);
+		lua_pushcfunction(L, next);
 		push(L, iter);
 		return 2;
 	};
@@ -490,14 +559,14 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 			let L = target[L_symbol];
 			let p = target[p_symbol];
 			let arg_length = argumentsList.length;
-			lauxlib.luaL_checkstack(L, 2+arg_length, null);
+			luaL_checkstack(L, 2+arg_length, null);
 			p(L);
-			let idx = lua.lua_gettop(L);
-			if (lauxlib.luaL_getmetafield(L, idx, lua.to_luastring("construct")) === lua.LUA_TNIL) {
-				lua.lua_pop(L, 1);
+			let idx = lua_gettop(L);
+			if (luaL_getmetafield(L, idx, to_luastring("construct")) === LUA_TNIL) {
+				lua_pop(L, 1);
 				throw new TypeError("not a constructor");
 			}
-			lua.lua_rotate(L, idx, 1);
+			lua_rotate(L, idx, 1);
 			for (let i=0; i<arg_length; i++) {
 				push(L, argumentsList[i]);
 			}
@@ -506,13 +575,13 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 		"defineProperty": function(target, prop, desc) {
 			let L = target[L_symbol];
 			let p = target[p_symbol];
-			lauxlib.luaL_checkstack(L, 4, null);
+			luaL_checkstack(L, 4, null);
 			p(L);
-			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("defineProperty")) === lua.LUA_TNIL) {
-				lua.lua_pop(L, 1);
+			if (luaL_getmetafield(L, -1, to_luastring("defineProperty")) === LUA_TNIL) {
+				lua_pop(L, 1);
 				return false;
 			}
-			lua.lua_rotate(L, -2, 1);
+			lua_rotate(L, -2, 1);
 			push(L, prop);
 			push(L, desc);
 			return jscall(L, 3);
@@ -526,26 +595,26 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 		"getOwnPropertyDescriptor": function(target, prop) {
 			let L = target[L_symbol];
 			let p = target[p_symbol];
-			lauxlib.luaL_checkstack(L, 3, null);
+			luaL_checkstack(L, 3, null);
 			p(L);
-			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("getOwnPropertyDescriptor")) === lua.LUA_TNIL) {
-				lua.lua_pop(L, 1);
+			if (luaL_getmetafield(L, -1, to_luastring("getOwnPropertyDescriptor")) === LUA_TNIL) {
+				lua_pop(L, 1);
 				return;
 			}
-			lua.lua_rotate(L, -2, 1);
+			lua_rotate(L, -2, 1);
 			push(L, prop);
 			return jscall(L, 2);
 		},
 		"getPrototypeOf": function(target) {
 			let L = target[L_symbol];
 			let p = target[p_symbol];
-			lauxlib.luaL_checkstack(L, 2, null);
+			luaL_checkstack(L, 2, null);
 			p(L);
-			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("getPrototypeOf")) === lua.LUA_TNIL) {
-				lua.lua_pop(L, 1);
+			if (luaL_getmetafield(L, -1, to_luastring("getPrototypeOf")) === LUA_TNIL) {
+				lua_pop(L, 1);
 				return null;
 			}
-			lua.lua_rotate(L, -2, 1);
+			lua_rotate(L, -2, 1);
 			return jscall(L, 1);
 		},
 		"has": function(target, k) {
@@ -554,13 +623,13 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 		"ownKeys": function(target) {
 			let L = target[L_symbol];
 			let p = target[p_symbol];
-			lauxlib.luaL_checkstack(L, 2, null);
+			luaL_checkstack(L, 2, null);
 			p(L);
-			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("ownKeys")) === lua.LUA_TNIL) {
-				lua.lua_pop(L, 1);
+			if (luaL_getmetafield(L, -1, to_luastring("ownKeys")) === LUA_TNIL) {
+				lua_pop(L, 1);
 				return;
 			}
-			lua.lua_rotate(L, -2, 1);
+			lua_rotate(L, -2, 1);
 			return jscall(L, 1);
 		},
 		"set": function(target, k, v) {
@@ -569,13 +638,13 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 		"setPrototypeOf": function(target, prototype) {
 			let L = target[L_symbol];
 			let p = target[p_symbol];
-			lauxlib.luaL_checkstack(L, 3, null);
+			luaL_checkstack(L, 3, null);
 			p(L);
-			if (lauxlib.luaL_getmetafield(L, -1, lua.to_luastring("setPrototypeOf")) === lua.LUA_TNIL) {
-				lua.lua_pop(L, 1);
+			if (luaL_getmetafield(L, -1, to_luastring("setPrototypeOf")) === LUA_TNIL) {
+				lua_pop(L, 1);
 				return false;
 			}
-			lua.lua_rotate(L, -2, 1);
+			lua_rotate(L, -2, 1);
 			push(L, prototype);
 			return jscall(L, 2);
 		}
@@ -625,11 +694,11 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 	};
 
 	const valid_types = ["function", "object"];
-	const valid_types_as_luastring = valid_types.map((v) => lua.to_luastring(v));
+	const valid_types_as_luastring = valid_types.map((v) => to_luastring(v));
 	jslib["createproxy"] = function(L) {
-		lauxlib.luaL_checkany(L, 1);
-		let type = valid_types[lauxlib.luaL_checkoption(L, 2, valid_types_as_luastring[0], valid_types_as_luastring)];
-		let fengariProxy = createproxy(L, lua.lua_toproxy(L, 1), type);
+		luaL_checkany(L, 1);
+		let type = valid_types[luaL_checkoption(L, 2, valid_types_as_luastring[0], valid_types_as_luastring)];
+		let fengariProxy = createproxy(L, lua_toproxy(L, 1), type);
 		push(L, fengariProxy);
 		return 1;
 	};
@@ -655,12 +724,12 @@ let jsmt = {
 	"__tostring": function(L) {
 		let u = checkjs(L, 1);
 		let s = toString(u);
-		lua.lua_pushstring(L, lua.to_luastring(s));
+		lua_pushstring(L, to_luastring(s));
 		return 1;
 	},
 	"__call": function(L) {
 		let u = checkjs(L, 1);
-		let nargs = lua.lua_gettop(L)-1;
+		let nargs = lua_gettop(L)-1;
 		let thisarg;
 		let args = new Array(Math.max(0, nargs-1));
 		if (nargs > 0) {
@@ -678,14 +747,14 @@ let jsmt = {
 		let u = checkjs(L, 1);
 		let f;
 		if (typeof Symbol !== "function" || (f = u[Symbol.for("__pairs")]) === void 0)
-			lauxlib.luaL_argerror(L, 1, lua.to_luastring("js object has no __pairs Symbol"));
+			luaL_argerror(L, 1, to_luastring("js object has no __pairs Symbol"));
 		let r = apply(f, u, []);
 		if (r === void 0)
-			lauxlib.luaL_error(L, lua.to_luastring("bad '__pairs' result (object with keys 'iter', 'state', 'first' expected)"));
+			luaL_error(L, to_luastring("bad '__pairs' result (object with keys 'iter', 'state', 'first' expected)"));
 		let iter = r.iter;
 		if (iter === void 0)
-			lauxlib.luaL_error(L, lua.to_luastring("bad '__pairs' result (object.iter is missing)"));
-		lua.lua_pushcfunction(L, function() {
+			luaL_error(L, to_luastring("bad '__pairs' result (object.iter is missing)"));
+		lua_pushcfunction(L, function() {
 			let state = tojs(L, 1);
 			let last = tojs(L, 2);
 			let r = iter.call(state, last);
@@ -694,8 +763,8 @@ let jsmt = {
 				return 0;
 			/* otherwise it should return an array of results */
 			if (!Array.isArray(r))
-				lauxlib.luaL_error(L, lua.to_luastring("bad iterator result (Array or undefined expected)"));
-			lauxlib.luaL_checkstack(L, r.length, null);
+				luaL_error(L, to_luastring("bad iterator result (Array or undefined expected)"));
+			luaL_checkstack(L, r.length, null);
 			for (let i=0; i<r.length; i++) {
 				push(L, r[i]);
 			}
@@ -709,7 +778,7 @@ let jsmt = {
 		let u = checkjs(L, 1);
 		let f;
 		if (typeof Symbol !== "function" || (f = u[Symbol.for("__len")]) === void 0)
-			lauxlib.luaL_argerror(L, 1, lua.to_luastring("js object has no __len Symbol"));
+			luaL_argerror(L, 1, to_luastring("js object has no __len Symbol"));
 		let r = apply(f, u, []);
 		push(L, r);
 		return 1;
@@ -760,22 +829,22 @@ const luaopen_js = function(L) {
 	/* Add weak map to track objects seen */
 	states.set(getmainthread(L), new WeakMap());
 
-	lua.lua_atnativeerror(L, atnativeerror);
+	lua_atnativeerror(L, atnativeerror);
 
-	lauxlib.luaL_newlib(L, jslib);
+	luaL_newlib(L, jslib);
 
-	lauxlib.luaL_newmetatable(L, js_tname);
-	lauxlib.luaL_setfuncs(L, jsmt, 0);
-	lua.lua_pop(L, 1);
+	luaL_newmetatable(L, js_tname);
+	luaL_setfuncs(L, jsmt, 0);
+	lua_pop(L, 1);
 
 	pushjs(L, null);
 	/* Store null object in registry under lightuserdata null */
-	lua.lua_pushvalue(L, -1);
-	lua.lua_rawsetp(L, lua.LUA_REGISTRYINDEX, null);
-	lua.lua_setfield(L, -2, lua.to_luastring("null"));
+	lua_pushvalue(L, -1);
+	lua_rawsetp(L, LUA_REGISTRYINDEX, null);
+	lua_setfield(L, -2, to_luastring("null"));
 
 	push(L, global_env);
-	lua.lua_setfield(L, -2, lua.to_luastring("global"));
+	lua_setfield(L, -2, to_luastring("global"));
 
 	return 1;
 };
