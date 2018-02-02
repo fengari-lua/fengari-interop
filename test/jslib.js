@@ -1,10 +1,11 @@
 "use strict";
 
-const fengari = require("fengari");
-const lua = fengari.lua;
-const lauxlib = fengari.lauxlib;
-const lualib = fengari.lualib;
-const to_luastring = fengari.to_luastring;
+const {
+	lua,
+	lauxlib,
+	lualib,
+	to_luastring
+} = require("fengari");
 const assert = require("assert");
 
 describe("fengari-interop", function() {
@@ -16,7 +17,7 @@ describe("fengari-interop", function() {
 	const new_state = function() {
 		const jslib = require("../src/jslib.js");
 
-		const L = fengari.lauxlib.luaL_newstate();
+		const L = lauxlib.luaL_newstate();
 		lualib.luaL_openlibs(L);
 		lauxlib.luaL_requiref(L, to_luastring("js"), jslib.luaopen_js, 0);
 		return L;
