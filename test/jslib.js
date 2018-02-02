@@ -4,6 +4,7 @@ const fengari = require("fengari");
 const lua = fengari.lua;
 const lauxlib = fengari.lauxlib;
 const lualib = fengari.lualib;
+const to_luastring = fengari.to_luastring;
 const assert = require("assert");
 
 describe("fengari-interop", function() {
@@ -17,13 +18,13 @@ describe("fengari-interop", function() {
 
 		const L = fengari.lauxlib.luaL_newstate();
 		lualib.luaL_openlibs(L);
-		lauxlib.luaL_requiref(L, lua.to_luastring("js"), jslib.luaopen_js, 0);
+		lauxlib.luaL_requiref(L, to_luastring("js"), jslib.luaopen_js, 0);
 		return L;
 	};
 
 	it("can be required from lua", function() {
 		const L = new_state();
-		if (lauxlib.luaL_dostring(L, lua.to_luastring('require("js")')) !== lua.LUA_OK) {
+		if (lauxlib.luaL_dostring(L, to_luastring('require("js")')) !== lua.LUA_OK) {
 			throw lua.lua_tojsstring(L, -1);
 		}
 	});
@@ -31,7 +32,7 @@ describe("fengari-interop", function() {
 	it("pushes same null every time", function() {
 		const jslib = require("../src/jslib.js");
 		const L = new_state();
-		if (lauxlib.luaL_loadstring(L, lua.to_luastring(`
+		if (lauxlib.luaL_loadstring(L, to_luastring(`
 		local null = ...
 		local js = require "js"
 		assert(null == js.null)
@@ -48,7 +49,7 @@ describe("fengari-interop", function() {
 	it("allows calls with no 'this' or arguments", function() {
 		const jslib = require("../src/jslib.js");
 		const L = new_state();
-		if (lauxlib.luaL_loadstring(L, lua.to_luastring(`
+		if (lauxlib.luaL_loadstring(L, to_luastring(`
 		local js = require "js"
 		js.global.Date.now()
 		`)) !== lua.LUA_OK) {
