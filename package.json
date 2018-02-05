@@ -22,7 +22,8 @@
 	},
 	"main": "src/jslib.js",
 	"directories": {
-		"lib": "src"
+		"lib": "src",
+		"test": "test"
 	},
 	"devDependencies": {
 		"babel-core": "^6.26.0",
