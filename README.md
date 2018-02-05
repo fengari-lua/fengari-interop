@@ -72,6 +72,60 @@ Returns if the value `x` is an instance of the class `y` via use of the JavaScri
 Returns what JavaScript sees as the type of `x`. Uses the JavaScript [`typeof` operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/typeof)
 
 
+## JavaScript API
+
+### `push(L, value)`
+
+Pushes an arbitrary JavaScript object `value` as the most suitable lua type onto the lua stack `L`.
+Performs deduplication so that the same JavaScript objects are pushed as the same lua objects.
+
+
+### `pushjs(L, value)`
+
+Pushes an arbitrary JavaScript object `value` as a userdata onto the lua stack `L`.
+Rarely used; see `push(L, value)` instead.
+
+
+### `checkjs(L, idx)`
+
+If the value on the lua stack `L` at index `idx` is a JavaScript userdata object (as pushed by `push` or `pushjs`) then return it.
+Otherwise throw an error.
+
+
+### `testjs(L, idx)`
+
+If the value on the lua stack `L` at index `idx` is a JavaScript userdata object (as pushed by `push` or `pushjs`) then return it.
+Otherwise returns `undefined`.
+
+
+### `tojs(L, idx)`
+
+Returns the object on the lua stack `L` at index `idx` as the most suitable javascript type.
+
+  - `nil` is returned as `undefined`
+  - booleans are returned as booleans
+  - numbers are returned as numbers
+  - strings are returned as JavaScript strings
+    (Note: this *can* throw an error if the lua string is not represenable as a JavaScript string)
+  - JavaScript userdata object (as pushed by `push` or `pushjs`) returns the pushed JavaScript object
+  - Other objects are returned wrapped in a JavaScript function object with methods:
+      - `apply(this, [args...])`: calls the lua object. Returns only the first return value
+      - `invoke(this, [args...])`: calls the lua object. Returns results as an array
+      - `get(key)`: indexes the lua object
+      - `has(key)`: checks if indexing the lua object results in `nil`
+      - `set(key, value)`
+      - `delete(key)`: sets the key to `nil`
+      - `toString()`
+    JavaScript arguments to these methods are passed in via `push()` and results are returned via `tojs()`.
+    Calling the function is equivalent to calling the lua function wrapped.
+
+
+### `luaopen_js`
+
+The entrypoint for loading the [js library](#js-library) into a fengari `lua_State`.
+Usually passed to `luaL_requiref`.
+
+
 ## Symbols
 
 If the JavaScript environment supports [Symbols](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Symbol), then some runtime-wide symbols can be used to customise behaviour:
