@@ -17,8 +17,8 @@
 		"url": "https://github.com/fengari-lua/fengari-interop/issues"
 	},
 	"homepage": "https://github.com/fengari-lua/fengari-interop",
-	"dependencies": {
-		"fengari": "fengari-lua/fengari"
+	"peerDependencies": {
+		"fengari": "^0.0.1"
 	},
 	"main": "src/jslib.js",
 	"directories": {
@@ -26,8 +26,9 @@
 	},
 	"devDependencies": {
 		"babel-minify-webpack-plugin": "^0.2.0",
-		"eslint": "^4.13.0",
-		"mocha": "^4.0.1",
+		"eslint": "^4.17.0",
+		"fengari": "^0.0.1",
+		"mocha": "^5.0.0",
 		"webpack": "^3.5.5"
 	},
 	"scripts": {
