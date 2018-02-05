@@ -824,6 +824,13 @@ if (typeof Symbol === "function") {
 		getPrototypeOf(new Float64Array())
 	];
 
+	if (global_env.document) {
+		/* NodeListPrototype */
+		arraylikeprototypes.push(getPrototypeOf(document.childNodes));
+		/* DOMTokenList */
+		arraylikeprototypes.push(getPrototypeOf(document.documentElement.classList));
+	}
+
 	arraylikeprototypes.forEach(function(c) {
 		c[Symbol.for("__len")] = __len;
 	});
