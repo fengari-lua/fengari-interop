@@ -1,6 +1,6 @@
 const webpack = require('webpack');
 const path = require('path');
-const MinifyPlugin = require("babel-minify-webpack-plugin");
+const MinifyPlugin = require('babel-minify-webpack-plugin');
 
 module.exports = [
 	{
@@ -12,11 +12,11 @@ module.exports = [
 			libraryTarget: 'global'
 		},
 		externals: {
-			"fengari": "fengari"
+			'fengari': 'fengari'
 		},
 		plugins: [
 			new webpack.DefinePlugin({
-				"typeof process": JSON.stringify("undefined")
+				'typeof process': JSON.stringify('undefined')
 			})
 		]
 	},
@@ -29,11 +29,11 @@ module.exports = [
 			libraryTarget: 'global'
 		},
 		externals: {
-			"fengari": "fengari"
+			'fengari': 'fengari'
 		},
 		plugins: [
 			new webpack.DefinePlugin({
-				"typeof process": JSON.stringify("undefined")
+				'typeof process': JSON.stringify('undefined')
 			}),
 			new MinifyPlugin()
 		]
