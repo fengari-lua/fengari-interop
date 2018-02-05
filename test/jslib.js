@@ -71,4 +71,10 @@ describe("fengari-interop", function() {
 			throw tojs(L, -1);
 		}
 	});
+
+	it("attaches __len to typed arrays", function() {
+		let a = new Uint16Array(1);
+		if (a[Symbol.for("__len")] === void 0)
+			throw Error("missing __len");
+	});
 });

@@ -98,8 +98,6 @@ const global_env = (function() {
 	}
 })();
 
-const getPrototypeOf = Object.getPrototypeOf;
-
 let apply, construct;
 if (typeof Reflect !== "undefined") {
 	apply = Reflect.apply;
@@ -805,34 +803,30 @@ if (typeof Symbol === "function") {
 		};
 	};
 
-	/* Create __len for all objects that inherit from Array */
+	const arraylikes = [
+		Array,
+		Int8Array,
+		Uint8Array,
+		Uint8ClampedArray,
+		Int16Array,
+		Uint16Array,
+		Int32Array,
+		Uint32Array,
+		Float32Array,
+		Float64Array
+	];
+	if (typeof NodeList !== "undefined")
+		arraylikes.push(NodeList);
+	if (typeof DOMTokenList !== "undefined")
+		arraylikes.push(DOMTokenList);
+
+	/* Add __len metamethod for all Array-like objects */
 	const __len = function() {
 		return this.length;
 	};
 
-	const arraylikeprototypes = [
-		Array.prototype,
-		/* Add __len to each TypedArrayPrototype */
-		getPrototypeOf(new Int8Array()),
-		getPrototypeOf(new Uint8Array()),
-		getPrototypeOf(new Uint8ClampedArray()),
-		getPrototypeOf(new Int16Array()),
-		getPrototypeOf(new Uint16Array()),
-		getPrototypeOf(new Int32Array()),
-		getPrototypeOf(new Uint32Array()),
-		getPrototypeOf(new Float32Array()),
-		getPrototypeOf(new Float64Array())
-	];
-
-	if (global_env.document) {
-		/* NodeListPrototype */
-		arraylikeprototypes.push(getPrototypeOf(document.childNodes));
-		/* DOMTokenList */
-		arraylikeprototypes.push(getPrototypeOf(document.documentElement.classList));
-	}
-
-	arraylikeprototypes.forEach(function(c) {
-		c[Symbol.for("__len")] = __len;
+	arraylikes.forEach(function(c) {
+		c.prototype[Symbol.for("__len")] = __len;
 	});
 }
 
