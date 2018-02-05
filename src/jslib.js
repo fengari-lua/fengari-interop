@@ -98,6 +98,8 @@ const global_env = (function() {
 	}
 })();
 
+const getPrototypeOf = Object.getPrototypeOf;
+
 let apply, construct;
 if (typeof Reflect !== "undefined") {
 	apply = Reflect.apply;
@@ -807,21 +809,23 @@ if (typeof Symbol === "function") {
 	const __len = function() {
 		return this.length;
 	};
-	Array.prototype[Symbol.for("__len")] = __len;
 
-	/* Add __len to each TypedArrayPrototype */
-	[
-		Int8Array,
-		Uint8Array,
-		Uint8ClampedArray,
-		Int16Array,
-		Uint16Array,
-		Int32Array,
-		Uint32Array,
-		Float32Array,
-		Float64Array
-	].forEach(function(c) {
-		Object.getPrototypeOf(new c())[Symbol.for("__len")] = __len;
+	const arraylikeprototypes = [
+		Array.prototype,
+		/* Add __len to each TypedArrayPrototype */
+		getPrototypeOf(new Int8Array()),
+		getPrototypeOf(new Uint8Array()),
+		getPrototypeOf(new Uint8ClampedArray()),
+		getPrototypeOf(new Int16Array()),
+		getPrototypeOf(new Uint16Array()),
+		getPrototypeOf(new Int32Array()),
+		getPrototypeOf(new Uint32Array()),
+		getPrototypeOf(new Float32Array()),
+		getPrototypeOf(new Float64Array())
+	];
+
+	arraylikeprototypes.forEach(function(c) {
+		c[Symbol.for("__len")] = __len;
 	});
 }
 
