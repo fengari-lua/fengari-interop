@@ -21,12 +21,12 @@ const assert = require("assert");
 
 describe("fengari-interop", function() {
 	it("loads successfully", function() {
-		const { luaopen_js } = require("../src/jslib.js");
+		const { luaopen_js } = require("../src/js.js");
 		assert(typeof luaopen_js === "function");
 	});
 
 	const new_state = function() {
-		const { luaopen_js } = require("../src/jslib.js");
+		const { luaopen_js } = require("../src/js.js");
 
 		const L = luaL_newstate();
 		luaL_openlibs(L);
@@ -42,7 +42,7 @@ describe("fengari-interop", function() {
 	});
 
 	it("pushes same null every time", function() {
-		const { push, tojs } = require("../src/jslib.js");
+		const { push, tojs } = require("../src/js.js");
 		const L = new_state();
 		if (luaL_loadstring(L, to_luastring(`
 		local null = ...
@@ -59,7 +59,7 @@ describe("fengari-interop", function() {
 	});
 
 	it("allows calls with no 'this' or arguments", function() {
-		const { tojs } = require("../src/jslib.js");
+		const { tojs } = require("../src/js.js");
 		const L = new_state();
 		if (luaL_loadstring(L, to_luastring(`
 		local js = require "js"

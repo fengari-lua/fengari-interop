@@ -3,7 +3,7 @@ const path = require('path');
 
 module.exports = [
 	{
-		entry: './src/jslib.js',
+		entry: './src/js.js',
 		target: 'web',
 		output: {
 			path: path.resolve(__dirname, 'dist'),

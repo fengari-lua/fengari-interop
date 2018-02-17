@@ -20,7 +20,7 @@
 	"peerDependencies": {
 		"fengari": "^0.0.1"
 	},
-	"main": "src/jslib.js",
+	"main": "src/js.js",
 	"directories": {
 		"lib": "src",
 		"test": "test"
