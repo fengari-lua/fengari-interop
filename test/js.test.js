@@ -149,6 +149,51 @@ describe("fengari-interop", function() {
 	});
 
 	describe("manipulating lua objects from JS", function() {
+		test("apply success", function() {
+			const L = new_state();
+			if (luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = function(x) return x+2 end
+				local r = js.global:Function([[
+					return this.apply(1, [])
+				]]):call(t)
+				assert(r == 3)
+			`)) !== LUA_OK) {
+				throw tojs(L, -1);
+			}
+		});
+
+		test("apply with odd 'args' argument", function() {
+			const L = new_state();
+			if (luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = function(x, ...)
+					assert(select("#", ...) == 0, "wrong number of arguments")
+					return 42
+				end
+				assert(js.global:Function([[
+					return this.apply(1, {length: {}}) // should coerce to 0
+				]]):call(t) == 42)
+			`)) !== LUA_OK) {
+				throw tojs(L, -1);
+			}
+		});
+
+		test("apply throwing", function() {
+			const L = new_state();
+			expect(luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = function(x) error("injected failure") end
+				js.global:Function([[
+					return this.apply(1, [])
+				]]):call(t)
+			`))).toBe(LUA_ERRRUN);
+			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+		});
+
 		test("invoke success", function() {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
