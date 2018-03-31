@@ -685,13 +685,13 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 
 	```js
 	Reflect.ownKeys((function(){})) // Array [ "prototype", "length", "name" ]
-	Reflect.ownKeys((()=>void 0))   // Array [ "length", "name" ]
+	Reflect.ownKeys((() = >void 0)) // Array [ "length", "name" ]
 	```
 
 	On the other hand, you cannot use arrow functions as a constructor:
 
 	```js
-	new (new Proxy(()=>void 0, { construct: function() { return {}; } })) // TypeError: (intermediate value) is not a constructor
+	new (new Proxy(() => void 0, { construct: function() { return {}; } })) // TypeError: (intermediate value) is not a constructor
 	new (new Proxy(function(){}, { construct: function() { return {}; } })) // {}
 	```
 
