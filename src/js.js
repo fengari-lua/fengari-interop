@@ -144,6 +144,7 @@ const isobject = function(o) {
 };
 
 const js_tname = to_luastring("js object");
+const js_library_not_loaded = "js library not loaded into lua_State";
 
 const testjs = function(L, idx) {
 	let u = luaL_testudata(L, idx, js_tname);
@@ -200,14 +201,14 @@ const push = function(L, v) {
 			if (v === null) {
 				/* can't use null in a WeakMap; grab from registry */
 				if (lua_rawgetp(L, LUA_REGISTRYINDEX, null) !== LUA_TUSERDATA)
-					throw Error("js library not loaded into lua_State");
+					throw Error(js_library_not_loaded);
 				break;
 			}
 			/* fall through */
 		default: {
 			/* Try and push same object again */
 			let objects_seen = states.get(getmainthread(L));
-			if (!objects_seen) throw Error("js library not loaded into lua_State");
+			if (!objects_seen) throw Error(js_library_not_loaded);
 			let p = objects_seen.get(v);
 			if (p) {
 				p(L);
@@ -495,7 +496,7 @@ const wrap = function(L1, p) {
 		js_proxy[custom_inspect_symbol] = js_proxy.toString;
 	}
 	let objects_seen = states.get(L);
-	if (!objects_seen) throw Error("js library not loaded into lua_State");
+	if (!objects_seen) throw Error(js_library_not_loaded);
 	objects_seen.set(js_proxy, p);
 	return js_proxy;
 };
