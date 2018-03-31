@@ -230,7 +230,7 @@ describe("fengari-interop", function() {
 						}
 					},
 					state: null
-				}
+				};
 			}
 		});
 		if (lua_pcall(L, 1, 0, 0) !== LUA_OK) {
@@ -266,7 +266,7 @@ describe("fengari-interop", function() {
 		lua_pushvalue(L, -1);
 		push(L, {
 			[Symbol.for("__pairs")]: function() {
-				return {}
+				return {};
 			}
 		});
 		expect(lua_pcall(L, 1, 0, 0)).toBe(LUA_ERRRUN);
@@ -280,7 +280,7 @@ describe("fengari-interop", function() {
 					iter: function() {
 						return "invalid result";
 					}
-				}
+				};
 			}
 		});
 		expect(lua_pcall(L, 1, 0, 0)).toBe(LUA_ERRRUN);
