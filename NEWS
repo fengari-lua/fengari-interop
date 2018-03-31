@@ -1,0 +1,4 @@
+0.1.0 - 2018-04-01
+
+  - Lua <=> JavaScript bridge for Fengari
+  - All types of data can be passed either way with no memory leaks
