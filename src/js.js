@@ -32,6 +32,7 @@ const {
 	lua_pop,
 	lua_pushboolean,
 	lua_pushcfunction,
+	lua_pushinteger,
 	lua_pushlightuserdata,
 	lua_pushliteral,
 	lua_pushnil,
@@ -74,7 +75,12 @@ const {
 	luaopen_base
 } = lualib;
 
-const FENGARI_INTEROP_VERSION = "0.0.1";
+const FENGARI_INTEROP_VERSION_MAJOR   = "0";
+const FENGARI_INTEROP_VERSION_MINOR   = "0";
+const FENGARI_INTEROP_VERSION_NUM     = 0;
+const FENGARI_INTEROP_VERSION_RELEASE = "1";
+const FENGARI_INTEROP_VERSION         = FENGARI_INTEROP_VERSION_MAJOR + "." + FENGARI_INTEROP_VERSION_MINOR;
+const FENGARI_INTEROP_RELEASE         = FENGARI_INTEROP_VERSION + "." + FENGARI_INTEROP_VERSION_RELEASE;
 
 let custom_inspect_symbol;
 if (typeof process !== "undefined") {
@@ -864,6 +870,10 @@ const luaopen_js = function(L) {
 	luaL_newlib(L, jslib);
 	lua_pushliteral(L, FENGARI_INTEROP_VERSION);
 	lua_setfield(L, -2, to_luastring("_VERSION"));
+	lua_pushinteger(L, FENGARI_INTEROP_VERSION_NUM);
+	lua_setfield(L, -2, to_luastring("_VERSION_NUM"));
+	lua_pushliteral(L, FENGARI_INTEROP_RELEASE);
+	lua_setfield(L, -2, to_luastring("_RELEASE"));
 
 	luaL_newmetatable(L, js_tname);
 	luaL_setfuncs(L, jsmt, 0);
@@ -882,6 +892,8 @@ const luaopen_js = function(L) {
 };
 
 module.exports.FENGARI_INTEROP_VERSION = FENGARI_INTEROP_VERSION;
+module.exports.FENGARI_INTEROP_VERSION_NUM = FENGARI_INTEROP_VERSION_NUM;
+module.exports.FENGARI_INTEROP_RELEASE = FENGARI_INTEROP_RELEASE;
 module.exports.checkjs = checkjs;
 module.exports.testjs = testjs;
 module.exports.pushjs = pushjs;
