@@ -17,12 +17,11 @@ const {
 	},
 	to_luastring
 } = require("fengari");
-const assert = require("assert");
 
 describe("fengari-interop", function() {
 	it("loads successfully", function() {
 		const { luaopen_js } = require("../src/js.js");
-		assert(typeof luaopen_js === "function");
+		expect(typeof luaopen_js).toBe("function");
 	});
 
 	const new_state = function() {
