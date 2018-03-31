@@ -275,9 +275,6 @@ const invoke = function(L, p, thisarg, args, n_results) {
 	let length = +args.length;
 	if (!(length >= 0)) length = 0; /* Keep NaN in mind */
 	luaL_checkstack(L, 2+length, null);
-	if ((n_results === void 0) || (n_results === null)) {
-		n_results = LUA_MULTRET;
-	}
 	let base = lua_gettop(L);
 	p(L);
 	push(L, thisarg);
