@@ -22,7 +22,7 @@ const {
 } = require("fengari");
 
 describe("fengari-interop", function() {
-	const { luaopen_js, push, tojs } = require("../src/js.js");
+	const { FENGARI_INTEROP_VERSION, luaopen_js, push, tojs } = require("../src/js.js");
 	const new_state = function() {
 		const L = luaL_newstate();
 		luaL_openlibs(L);
@@ -32,6 +32,18 @@ describe("fengari-interop", function() {
 
 	it("loads successfully", function() {
 		expect(typeof luaopen_js).toBe("function");
+	});
+
+	it("version present", function() {
+		expect(require("../package.json").version).toEqual(expect.stringContaining(FENGARI_INTEROP_VERSION));
+
+		const L = new_state();
+		if (luaL_dostring(L, to_luastring(`
+		local js = require "js"
+		assert(js._VERSION == "${FENGARI_INTEROP_VERSION}")
+		`)) !== LUA_OK) {
+			throw tojs(L, -1);
+		}
 	});
 
 	it("can be required from lua", function() {
