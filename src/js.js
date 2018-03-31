@@ -422,7 +422,7 @@ const iter_next = function() {
 
 /* make iteration use pairs() */
 const jsiterator = function(L, p) {
-	luaL_checkstack(this.L, 2, null);
+	luaL_checkstack(L, 2, null);
 	luaL_requiref(L, to_luastring("_G"), luaopen_base, 0);
 	lua_getfield(L, -1, to_luastring("pairs"));
 	lua_remove(L, -2);

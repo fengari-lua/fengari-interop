@@ -148,6 +148,33 @@ describe("fengari-interop", function() {
 		}
 	});
 
+	it("iterating lua objects with Symbol.iterator", function() {
+		const L = new_state();
+		if (luaL_dostring(L, to_luastring(`
+		local js = require "js"
+		js.global:Function([[
+			let i = 0;
+			for (let o of this) {
+				i = i + 1;
+				let expected;
+				if (o[0] === 1)
+					expected = "one";
+				else if (o[0] === "foo")
+					expected = "foo";
+				else if (o[0] === "answer")
+					expected = 42;
+				else
+					throw new Error("unexpected key");
+				if (o[1] !== expected)
+					throw new Error("unexpected value");
+			}
+			if (i !== 3) throw new Error("failed to iterate");
+		]]):call({"one", foo = "foo", answer = 42})
+		`)) !== LUA_OK) {
+			throw tojs(L, -1);
+		}
+	});
+
 	it("js.new works for #args 0..5", function() {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
