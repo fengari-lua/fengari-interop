@@ -629,7 +629,7 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 			p(L);
 			if (luaL_getmetafield(L, -1, to_luastring("ownKeys")) === LUA_TNIL) {
 				lua_pop(L, 1);
-				return;
+				throw Error("ownKeys unknown for fengari object");
 			}
 			lua_rotate(L, -2, 1);
 			return jscall(L, 1);
