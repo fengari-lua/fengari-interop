@@ -56,13 +56,10 @@ describe("fengari-interop", function() {
 
 	it("allows calls with no 'this' or arguments", function() {
 		const L = new_state();
-		if (luaL_loadstring(L, to_luastring(`
+		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
 		js.global.Date.now()
 		`)) !== LUA_OK) {
-			throw lua_tojsstring(L, -1);
-		}
-		if (lua_pcall(L, 0, 0, 0) !== LUA_OK) {
 			throw tojs(L, -1);
 		}
 	});
