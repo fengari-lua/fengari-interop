@@ -26,17 +26,11 @@
 		"test": "test"
 	},
 	"devDependencies": {
-		"babel-core": "^6.26.0",
-		"babel-loader": "^7.1.4",
-		"babel-preset-env": "^1.6.1",
 		"eslint": "^4.19.1",
 		"fengari": "^0.1.0",
-		"mocha": "^5.0.5",
-		"webpack": "^4.4.1",
-		"webpack-cli": "^2.0.13"
+		"mocha": "^5.0.5"
 	},
 	"scripts": {
-		"build": "webpack",
 		"lint": "eslint src/ test/",
 		"prepublishOnly": "git diff-index --quiet --cached HEAD -- && npm run lint && npm run test",
 		"test": "mocha"
