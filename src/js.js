@@ -133,9 +133,11 @@ if (typeof Reflect !== "undefined") {
 	Reflect_deleteProperty = Function("t", "k", "delete t[k]");
 }
 
-const toString = function(o) {
-	return ""+o;
-};
+/*
+String.concat coerces to string with correct hint for Symbol.toPrimitive
+`this` isn't allowed to be null, so bind the empty string
+*/
+const toString = String.prototype.concat.bind("");
 
 const isobject = function(o) {
 	return typeof o === "object" ? o !== null : typeof o === "function";
@@ -512,6 +514,11 @@ const jslib = {
 	"tonumber": function(L) {
 		let u = tojs(L, 1);
 		lua_pushnumber(L, +u);
+		return 1;
+	},
+	"tostring": function(L) {
+		let u = tojs(L, 1);
+		lua_pushliteral(L, toString(u));
 		return 1;
 	},
 	"instanceof": function(L) {

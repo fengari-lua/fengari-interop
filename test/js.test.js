@@ -183,6 +183,17 @@ describe("fengari-interop", function() {
 		}
 	});
 
+	it("js.tostring works", function() {
+		const L = new_state();
+		if (luaL_dostring(L, to_luastring(`
+		local js = require "js"
+		local t = {}
+		assert(tostring(t) == js.tostring(t))
+		`)) !== LUA_OK) {
+			throw tojs(L, -1);
+		}
+	});
+
 	it("js.instanceof works", function() {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`

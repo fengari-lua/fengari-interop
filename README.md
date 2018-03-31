@@ -78,6 +78,11 @@ Note that JavaScript coerces all types except Symbols to strings before using th
 Coerces the value `x` to a number using JavaScript coercion rules.
 
 
+### `tostring(x)`
+
+Coerces the value `x` to a string using JavaScript coercion rules.
+
+
 ### `instanceof(x, y)`
 
 Returns if the value `x` is an instance of the class `y` via use of the JavaScript [`instanceof` operator](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/instanceof)
