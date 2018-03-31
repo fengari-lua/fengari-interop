@@ -653,37 +653,59 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 		}
 	};
 
+	const raw_function = function() {
+		let f = function(){};
+		delete f.length;
+		delete f.name;
+		return f;
+	};
+
 	/*
-	  Functions created with `function(){}` have a non-configurable .prototype
-	  field. This causes issues with the .ownKeys and .getOwnPropertyDescriptor
-	  traps.
-	  However ES6 arrow functions do not (tested in firefox 57.0 and chrome 62).
-
-	  ```js
-	  Reflect.ownKeys((function(){})) // Array [ "prototype", "length", "name" ]
-	  Reflect.ownKeys((()=>void 0))   // Array [ "length", "name" ]
-	  ```
-
-	  We use Function() here to get prevent transpilers from converting to a
-	  non-arrow function.
-	  Additionally, we avoid setting the internal name field by never giving the
-	  new function a name in the block it was defined (and instead delete-ing
-	  the configurable fields .length and .name in a wrapper function)
+	We use Function() here to get prevent transpilers from converting to a
+	non-arrow function.
+	Additionally, we avoid setting the internal name field by never giving the
+	new function a name in the block it was defined (and instead delete-ing
+	the configurable fields .length and .name in a wrapper function)
 	*/
 	const make_arrow_function = Function("return ()=>void 0;");
-	const raw_function = function() {
+	const raw_arrow_function = function() {
 		let f = make_arrow_function();
 		delete f.length;
 		delete f.name;
 		return f;
 	};
 
+	/*
+	There is no one-size-fits-all proxy target:
+
+	Functions created with `function(){}` have a non-configurable .prototype
+	field. This causes issues with the .ownKeys and .getOwnPropertyDescriptor
+	traps.
+	However ES6 arrow functions do not (tested in firefox 57.0 and chrome 62).
+
+	```js
+	Reflect.ownKeys((function(){})) // Array [ "prototype", "length", "name" ]
+	Reflect.ownKeys((()=>void 0))   // Array [ "length", "name" ]
+	```
+
+	On the other hand, you cannot use arrow functions as a constructor:
+
+	```js
+	new (new Proxy(()=>void 0, { construct: function() { return {}; } })) // TypeError: (intermediate value) is not a constructor
+	new (new Proxy(function(){}, { construct: function() { return {}; } })) // {}
+	```
+
+	This implies that we must give users the choice of proxy type.
+	*/
 	const createproxy = function(L1, p, type) {
 		const L = getmainthread(L1);
 		let target;
 		switch (type) {
 			case "function":
 				target = raw_function();
+				break;
+			case "arrow_function":
+				target = raw_arrow_function();
 				break;
 			case "object":
 				target = {};
@@ -696,7 +718,7 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 		return new Proxy(target, proxy_handlers);
 	};
 
-	const valid_types = ["function", "object"];
+	const valid_types = ["function", "arrow_function", "object"];
 	const valid_types_as_luastring = valid_types.map((v) => to_luastring(v));
 	jslib["createproxy"] = function(L) {
 		luaL_checkany(L, 1);

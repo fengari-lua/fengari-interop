@@ -525,7 +525,7 @@ describe("fengari-interop", function() {
 			}
 		});
 
-		it.skip("implements construct", function() {
+		it("implements construct", function() {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
@@ -561,7 +561,7 @@ describe("fengari-interop", function() {
 			local t = {}
 			local mt = {}
 			setmetatable(t, mt)
-			local x = js.createproxy(t)
+			local x = js.createproxy(t, "object")
 
 			-- Try empty first
 			assert(not pcall(js.global.Reflect.ownKeys, nil, x), "ownKeys doesn't work by default")

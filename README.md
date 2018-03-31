@@ -55,9 +55,20 @@ end
 
 *Note: Only available if your JS environment has the Proxy constructor*
 
-Creates a JavaScript [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) object. The proxy supports calling (`apply`), indexing (`get` and `has`) and setting (`set` and `deleteProperty`).
+Creates a JavaScript [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) object. The proxy supports configuring traps by setting them as metamethods on your object.
 
-`type` is the desired result for `typeof proxy`; it may be `"function"` (the default) or `"object"`.
+`type` may be `"function"` (the default) `"arrow_function"` or `"object"`. There is no one-size-fits-all choice, and each option has its own idiosyncracies:
+
+  - `"function"`:
+      - `typeof p === "function"`
+      - Can be used as a constructor
+      - Has non-configurable `.prototype` field (which **must** be returned from `ownKeys`)
+  - `"arrow_function"`:
+      - `typeof p === "function"`
+      - Can **not** be used as a constructor
+  - `"object"`:
+      - `typeof p === "object"`
+      - Can **not** be used as a constructor
 
 Note that JavaScript coerces all types except Symbols to strings before using them as a key in an indexing operation.
 
