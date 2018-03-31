@@ -556,7 +556,7 @@ describe("fengari-interop", function() {
 			local t = {}
 			local mt = {}
 			setmetatable(t, mt)
-			local x = js.createproxy(t)
+			local x = js.createproxy(t, "function")
 
 			local iscalled = false
 			function mt:construct(...)
@@ -582,24 +582,26 @@ describe("fengari-interop", function() {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
-			local t = {}
-			local mt = {}
-			setmetatable(t, mt)
-			local x = js.createproxy(t, "object")
+			for _, type in ipairs{"arrow_function", "object"} do
+				local t = {}
+				local mt = {}
+				setmetatable(t, mt)
+				local x = js.createproxy(t, type)
 
-			-- Try empty first
-			assert(not pcall(js.global.Reflect.ownKeys, nil, x), "ownKeys doesn't work by default")
+				-- Try empty first
+				assert(not pcall(js.global.Reflect.ownKeys, nil, x), "ownKeys doesn't work by default")
 
-			local iscalled = false
-			function mt:ownKeys(...)
-				iscalled = true
-				assert(rawequal(self, t), "wrong self")
-				return js.global.Array:of("foo", "bar")
+				local iscalled = false
+				function mt:ownKeys(...)
+					iscalled = true
+					assert(rawequal(self, t), "wrong self")
+					return js.global.Array:of("foo", "bar")
+				end
+				local a = js.global.Reflect:ownKeys(x)
+				assert(a[0] == "foo")
+				assert(a[1] == "bar")
+				assert(iscalled)
 			end
-			local a = js.global.Reflect:ownKeys(x)
-			assert(a[0] == "foo")
-			assert(a[1] == "bar")
-			assert(iscalled)
 			`)) !== LUA_OK) {
 				throw tojs(L, -1);
 			}
