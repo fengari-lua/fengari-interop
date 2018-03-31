@@ -558,7 +558,14 @@ describe("fengari-interop", function() {
 			setmetatable(t, mt)
 			local x = js.createproxy(t, "function")
 
+			-- Try empty first
+			local ok, err = pcall(js.new, x, 1, 2, 3, 4, 5)
+			assert(not ok)
+			assert(js.instanceof(err, js.global.TypeError))
+			assert(tostring(err):match "not a constructor")
+
 			local iscalled = false
+			local res = {}
 			function mt:construct(...)
 				iscalled = true
 				assert(rawequal(self, t), "wrong self")
@@ -569,9 +576,9 @@ describe("fengari-interop", function() {
 				assert(c == 3)
 				assert(d == 4)
 				assert(e == 5)
-				return {}
+				return res
 			end
-			js.new(x, 1, 2, 3, 4, 5)
+			assert(js.new(x, 1, 2, 3, 4, 5) == res)
 			assert(iscalled)
 			`)) !== LUA_OK) {
 				throw tojs(L, -1);
