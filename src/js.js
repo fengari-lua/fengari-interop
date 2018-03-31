@@ -635,7 +635,8 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 			return jscall(L, 1);
 		},
 		"set": function(target, k, v) {
-			return set(target[L_symbol], target[p_symbol], k, v);
+			set(target[L_symbol], target[p_symbol], k, v);
+			return true;
 		},
 		"setPrototypeOf": function(target, prototype) {
 			let L = target[L_symbol];
