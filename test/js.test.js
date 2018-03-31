@@ -148,6 +148,205 @@ describe("fengari-interop", function() {
 		}
 	});
 
+	describe("manipulating lua objects from JS", function() {
+		test("invoke success", function() {
+			const L = new_state();
+			if (luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = function(x) return x+2, x*2 end
+				local r = js.global:Function([[
+					return this.invoke(1, [])
+				]]):call(t)
+				assert(r[0] == 3)
+				assert(r[1] == 2)
+			`)) !== LUA_OK) {
+				throw tojs(L, -1);
+			}
+		});
+
+		test("invoke throwing", function() {
+			const L = new_state();
+			expect(luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = function(x) error("injected failure") end
+				js.global:Function([[
+					return this.invoke(1, [])
+				]]):call(t)
+			`))).toBe(LUA_ERRRUN);
+			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+		});
+
+		test("get success", function() {
+			const L = new_state();
+			if (luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = {
+					foo = "bar"
+				}
+				assert(js.global:Function([[
+					return this.get("foo")
+				]]):call(t) == "bar")
+			`)) !== LUA_OK) {
+				throw tojs(L, -1);
+			}
+		});
+
+		test("get throwing", function() {
+			const L = new_state();
+			expect(luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = setmetatable({}, {
+					__index = function(t, k)
+						error("injected failure")
+					end;
+				})
+				js.global:Function([[
+					this.get("foo")
+				]]):call(t)
+			`))).toBe(LUA_ERRRUN);
+			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+		});
+
+		test("has success", function() {
+			const L = new_state();
+			if (luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = {
+					foo = "bar"
+				}
+				assert(js.global:Function([[
+					return this.has("foo")
+				]]):call(t))
+			`)) !== LUA_OK) {
+				throw tojs(L, -1);
+			}
+		});
+
+		test("has throwing", function() {
+			const L = new_state();
+			expect(luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = setmetatable({}, {
+					__index = function(t, k)
+						error("injected failure")
+					end;
+				})
+				js.global:Function([[
+					this.has("foo")
+				]]):call(t)
+			`))).toBe(LUA_ERRRUN);
+			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+		});
+
+		test("set success", function() {
+			const L = new_state();
+			if (luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = {}
+				js.global:Function([[
+					this.set("foo", "bar")
+				]]):call(t)
+				assert(t.foo == "bar")
+			`)) !== LUA_OK) {
+				throw tojs(L, -1);
+			}
+		});
+
+		test("set throwing", function() {
+			const L = new_state();
+			expect(luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = setmetatable({}, {
+					__newindex = function(t, k, v)
+						error("injected failure")
+					end;
+				})
+				js.global:Function([[
+					this.set("foo", "bar")
+				]]):call(t)
+			`))).toBe(LUA_ERRRUN);
+			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+		});
+
+		test("delete success", function() {
+			const L = new_state();
+			if (luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = {
+					foo = "bar"
+				}
+				js.global:Function([[
+					this.delete("foo")
+				]]):call(t)
+				assert(t.foo == nil)
+			`)) !== LUA_OK) {
+				throw tojs(L, -1);
+			}
+		});
+
+		test("delete throwing", function() {
+			const L = new_state();
+			expect(luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = setmetatable({}, {
+					__newindex = function(t, k, v)
+						assert(v == nil)
+						error("injected failure")
+					end;
+				})
+				js.global:Function([[
+					this.delete("foo")
+				]]):call(t)
+			`))).toBe(LUA_ERRRUN);
+			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+		});
+
+		test("toString success", function() {
+			const L = new_state();
+			if (luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = setmetatable({}, {
+					__tostring = function(t)
+						return "my string"
+					end;
+				})
+				assert(js.global:Function([[
+					return this.toString()
+				]]):call(t) == "my string")
+			`)) !== LUA_OK) {
+				throw tojs(L, -1);
+			}
+		});
+
+		test("toString throwing", function() {
+			const L = new_state();
+			expect(luaL_dostring(L, to_luastring(`
+				local js = require "js"
+
+				local t = setmetatable({}, {
+					__tostring = function(t)
+						error("injected failure")
+					end;
+				})
+				js.global:Function([[
+					this.toString()
+				]]):call(t)
+			`))).toBe(LUA_ERRRUN);
+			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+		});
+	});
+
 	it("iterating lua objects with Symbol.iterator", function() {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
