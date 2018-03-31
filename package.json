@@ -38,6 +38,7 @@
 	"scripts": {
 		"build": "webpack",
 		"lint": "eslint src/ test/",
+		"prepublishOnly": "git diff-index --quiet --cached HEAD -- && npm run lint && npm run test",
 		"test": "mocha"
 	},
 	"eslintConfig": {
