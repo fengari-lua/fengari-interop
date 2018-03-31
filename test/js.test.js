@@ -170,6 +170,65 @@ describe("fengari-interop", function() {
 		}
 	});
 
+	it("js.tonumber works", function() {
+		const L = new_state();
+		if (luaL_dostring(L, to_luastring(`
+		local js = require "js"
+		assert(js.tonumber(1) == 1)
+		assert(math.type(js.tonumber(1)) == "float")
+		assert(js.tonumber("1") == 1)
+		assert(math.type(js.tonumber("1")) == "float")
+		`)) !== LUA_OK) {
+			throw tojs(L, -1);
+		}
+	});
+
+	it("js.instanceof works", function() {
+		const L = new_state();
+		if (luaL_dostring(L, to_luastring(`
+		local js = require "js"
+		assert(js.instanceof(js.new(js.global.Object), js.global.Object))
+		assert(js.instanceof(js.new(js.global.Array), js.global.Object))
+		assert(js.instanceof(js.new(js.global.Function), js.global.Function))
+
+		-- Test negative case
+		assert(not js.instanceof(js.global, js.global.Boolean))
+		`)) !== LUA_OK) {
+			throw tojs(L, -1);
+		}
+	});
+
+	it("js.typeof works", function() {
+		const L = new_state();
+		if (luaL_dostring(L, to_luastring(`
+		local js = require "js"
+		assert(js.typeof(true) == "boolean")
+		assert(js.typeof(1) == "number")
+		assert(js.typeof("foo") == "string")
+		assert(js.typeof(js.null) == "object")
+		assert(js.typeof(js.new(js.global.Object)) == "object")
+		assert(js.typeof(js.new(js.global.Function)) == "function")
+		`)) !== LUA_OK) {
+			throw tojs(L, -1);
+		}
+	});
+
+	it("js.of works", function() {
+		const L = new_state();
+		if (luaL_dostring(L, to_luastring(`
+		local js = require "js"
+		local a = js.new(js.global.Array, 1, 2, 3)
+		local i = 0
+		for k in js.of(a) do
+			i = i + 1
+			assert(k == i)
+		end
+		assert(i == 3)
+		`)) !== LUA_OK) {
+			throw tojs(L, -1);
+		}
+	});
+
 	it("attaches __len to typed arrays", function() {
 		let a = new Uint16Array(1);
 		if (a[Symbol.for("__len")] === void 0)
