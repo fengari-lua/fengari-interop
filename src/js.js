@@ -106,10 +106,11 @@ const global_env = (function() {
 	}
 })();
 
-let apply, construct;
+let apply, construct, Reflect_deleteProperty;
 if (typeof Reflect !== "undefined") {
 	apply = Reflect.apply;
 	construct = Reflect.construct;
+	Reflect_deleteProperty = Reflect.deleteProperty;
 } else {
 	const fApply = Function.apply;
 	const bind = Function.bind;
@@ -128,6 +129,8 @@ if (typeof Reflect !== "undefined") {
 		args.push.apply(args, argumentsList);
 		return new (bind.apply(target, args))();
 	};
+	/* need to be in non-strict mode */
+	Reflect_deleteProperty = Function("t", "k", "delete t[k]");
 }
 
 const toString = function(o) {
@@ -747,7 +750,7 @@ let jsmt = {
 		let k = tojs(L, 2);
 		let v = tojs(L, 3);
 		if (v === void 0)
-			delete u[k];
+			Reflect_deleteProperty(u, k);
 		else
 			u[k] = v;
 		return 0;

@@ -399,7 +399,7 @@ describe("fengari-interop", function() {
 				assert(k == "foo", "wrong key")
 				assert(v == nil, "wrong value")
 			end
-			js.global.Reflect:deleteProperty(x, "foo")
+			x.foo = nil
 			assert(iscalled)
 			`)) !== LUA_OK) {
 				throw tojs(L, -1);
