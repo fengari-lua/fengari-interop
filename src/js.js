@@ -271,17 +271,20 @@ const jscall = function(L, nargs) {
 };
 
 const invoke = function(L, p, thisarg, args, n_results) {
-	luaL_checkstack(L, 2+args.length, null);
+	if (!isobject(args)) throw new TypeError("`args` argument must be an object");
+	let length = +args.length;
+	if (!(length >= 0)) length = 0; /* Keep NaN in mind */
+	luaL_checkstack(L, 2+length, null);
 	if ((n_results === void 0) || (n_results === null)) {
 		n_results = LUA_MULTRET;
 	}
 	let base = lua_gettop(L);
 	p(L);
 	push(L, thisarg);
-	for (let i=0; i<args.length; i++) {
+	for (let i=0; i<length; i++) {
 		push(L, args[i]);
 	}
-	switch(lua_pcall(L, 1+args.length, n_results, 0)) {
+	switch(lua_pcall(L, 1+length, n_results, 0)) {
 		case LUA_OK: {
 			let nres = lua_gettop(L)-base;
 			let res = new Array(nres);
