@@ -267,6 +267,24 @@ describe("fengari-interop", function() {
 		}
 	});
 
+	it("js.of fails on invalid args", function() {
+		const L = new_state();
+		if (luaL_dostring(L, to_luastring(`
+		local js = require "js"
+		do
+			local obj = js.new(js.global.Object)
+			assert(not pcall(js.of, obj))
+		end
+		do
+			local obj = js.new(js.global.Object)
+			obj[js.global.Symbol.iterator] = function() return "not an object" end
+			assert(not pcall(js.of, obj))
+		end
+		`)) !== LUA_OK) {
+			throw tojs(L, -1);
+		}
+	});
+
 	it("attaches __len to typed arrays", function() {
 		let a = new Uint16Array(1);
 		if (a[Symbol.for("__len")] === void 0)
