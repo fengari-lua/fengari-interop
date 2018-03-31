@@ -392,31 +392,60 @@ describe("fengari-interop", function() {
 		});
 	});
 
-	it("iterating lua objects with Symbol.iterator", function() {
-		const L = new_state();
-		if (luaL_dostring(L, to_luastring(`
-		local js = require "js"
-		js.global:Function([[
-			let i = 0;
-			for (let o of this) {
-				i = i + 1;
-				let expected;
-				if (o[0] === 1)
-					expected = "one";
-				else if (o[0] === "foo")
-					expected = "foo";
-				else if (o[0] === "answer")
-					expected = 42;
-				else
-					throw new Error("unexpected key");
-				if (o[1] !== expected)
-					throw new Error("unexpected value");
+	describe("iterating lua objects with Symbol.iterator", function() {
+		it("works", function() {
+			const L = new_state();
+			if (luaL_dostring(L, to_luastring(`
+				local js = require "js"
+				js.global:Function([[
+					let i = 0;
+					for (let o of this) {
+						i = i + 1;
+						let expected;
+						if (o[0] === 1)
+							expected = "one";
+						else if (o[0] === "foo")
+							expected = "foo";
+						else if (o[0] === "answer")
+							expected = 42;
+						else
+							throw new Error("unexpected key");
+						if (o[1] !== expected)
+							throw new Error("unexpected value");
+					}
+					if (i !== 3) throw new Error("failed to iterate");
+				]]):call({"one", foo = "foo", answer = 42})
+			`)) !== LUA_OK) {
+				throw tojs(L, -1);
 			}
-			if (i !== 3) throw new Error("failed to iterate");
-		]]):call({"one", foo = "foo", answer = 42})
-		`)) !== LUA_OK) {
-			throw tojs(L, -1);
-		}
+		});
+
+		it("handles error at pairs() time", function() {
+			const L = new_state();
+			expect(luaL_dostring(L, to_luastring(`
+				local js = require "js"
+				js.global:Function([[
+					for (let o of this) {}
+				]]):call(setmetatable({}, { __pairs = function() error("injected failure") end}))
+			`))).toBe(LUA_ERRRUN);
+			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+		});
+
+		it("handles error at next() time", function() {
+			const L = new_state();
+			expect(luaL_dostring(L, to_luastring(`
+				local js = require "js"
+				js.global:Function([[
+					for (let o of this) {}
+				]]):call(setmetatable({}, { __pairs = function()
+					return coroutine.wrap(function()
+						coroutine.yield("one")
+						error("injected failure")
+					end)
+				end}))
+			`))).toBe(LUA_ERRRUN);
+			expect(tojs(L, -1)).toEqual(expect.stringContaining("injected failure"));
+		});
 	});
 
 	it("js.new works for #args 0..5", function() {
