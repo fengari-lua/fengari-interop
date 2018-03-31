@@ -22,6 +22,7 @@ const {
 	LUA_TTHREAD,
 	LUA_TUSERDATA,
 	lua_atnativeerror,
+	lua_call,
 	lua_getfield,
 	lua_gettable,
 	lua_gettop,
@@ -42,7 +43,6 @@ const {
 	lua_rawgeti,
 	lua_rawgetp,
 	lua_rawsetp,
-	lua_remove,
 	lua_rotate,
 	lua_setfield,
 	lua_settable,
@@ -423,12 +423,15 @@ const iter_next = function() {
 
 /* make iteration use pairs() */
 const jsiterator = function(L, p) {
-	luaL_checkstack(L, 2, null);
-	luaL_requiref(L, to_luastring("_G"), luaopen_base, 0);
-	lua_getfield(L, -1, to_luastring("pairs"));
-	lua_remove(L, -2);
-	p(L);
-	switch(lua_pcall(L, 1, 3, 0)) {
+	luaL_checkstack(L, 1, null);
+	lua_pushcfunction(L, function(L) {
+		luaL_requiref(L, to_luastring("_G"), luaopen_base, 0);
+		lua_getfield(L, -1, to_luastring("pairs"));
+		p(L);
+		lua_call(L, 1, 3);
+		return 3;
+	});
+	switch(lua_pcall(L, 0, 3, 0)) {
 		case LUA_OK: {
 			let iter = lua_toproxy(L, -3);
 			let state = lua_toproxy(L, -2);
