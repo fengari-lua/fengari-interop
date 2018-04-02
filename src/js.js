@@ -673,8 +673,19 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 		}
 	};
 
+	/*
+	Functions created with `function(){}` have a non-configurable .prototype
+	field. This causes issues with the .ownKeys and .getOwnPropertyDescriptor
+	traps.
+	However using `.bind()` returns a function without the .prototype property.
+
+	```js
+	Reflect.ownKeys((function(){})) // Array [ "prototype", "length", "name" ]
+	Reflect.ownKeys((function(){}).bind()) // Array [ "length", "name" ]
+	```
+	*/
 	const raw_function = function() {
-		let f = function(){};
+		let f = (function(){}).bind();
 		delete f.length;
 		delete f.name;
 		return f;
@@ -696,26 +707,18 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 	};
 
 	/*
-	There is no one-size-fits-all proxy target:
-
-	Functions created with `function(){}` have a non-configurable .prototype
-	field. This causes issues with the .ownKeys and .getOwnPropertyDescriptor
-	traps.
-	However ES6 arrow functions do not (tested in firefox 57.0 and chrome 62).
+	Arrow functions do not have a .prototype field:
 
 	```js
-	Reflect.ownKeys((function(){})) // Array [ "prototype", "length", "name" ]
 	Reflect.ownKeys((() = >void 0)) // Array [ "length", "name" ]
 	```
 
-	On the other hand, you cannot use arrow functions as a constructor:
+	However they cannot be used as a constructor:
 
 	```js
 	new (new Proxy(() => void 0, { construct: function() { return {}; } })) // TypeError: (intermediate value) is not a constructor
 	new (new Proxy(function(){}, { construct: function() { return {}; } })) // {}
 	```
-
-	This implies that we must give users the choice of proxy type.
 	*/
 	const createproxy = function(L1, p, type) {
 		const L = getmainthread(L1);

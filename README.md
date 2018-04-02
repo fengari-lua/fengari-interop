@@ -53,16 +53,15 @@ end
 
 ### `createproxy(x[, type])`
 
-*Note: Only available if your JS environment has the Proxy constructor*
+*Note: Only available if your JS environment has the `Proxy` constructor*
 
 Creates a JavaScript [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) object. The proxy supports configuring traps by setting them as metamethods on your object.
 
-`type` may be `"function"` (the default) `"arrow_function"` or `"object"`. There is no one-size-fits-all choice, and each option has its own idiosyncracies:
+`type` may be `"function"` (the default) `"arrow_function"` or `"object"`:
 
   - `"function"`:
       - `typeof p === "function"`
       - Can be used as a constructor
-      - Has non-configurable `.prototype` field (which **must** be returned from `ownKeys`)
   - `"arrow_function"`:
       - `typeof p === "function"`
       - Can **not** be used as a constructor

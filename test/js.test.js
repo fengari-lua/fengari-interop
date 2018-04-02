@@ -941,33 +941,35 @@ describe("fengari-interop", function() {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
-			local t = {}
-			local mt = {}
-			setmetatable(t, mt)
-			local x = js.createproxy(t, "function")
+			for _, type in ipairs {"function", "arrow_function", "object"} do
+				local t = {}
+				local mt = {}
+				setmetatable(t, mt)
+				local x = js.createproxy(t, "function")
 
-			-- Try empty first
-			local ok, err = pcall(js.new, x, 1, 2, 3, 4, 5)
-			assert(not ok)
-			assert(js.instanceof(err, js.global.TypeError))
-			assert(tostring(err):match "not a constructor")
+				-- Try empty first
+				local ok, err = pcall(js.new, x, 1, 2, 3, 4, 5)
+				assert(not ok)
+				assert(js.instanceof(err, js.global.TypeError))
+				assert(tostring(err):match "not a constructor")
 
-			local iscalled = false
-			local res = {}
-			function mt:construct(...)
-				iscalled = true
-				assert(rawequal(self, t), "wrong self")
-				assert(select("#", ...) == 5, "wrong number of args")
-				local a, b, c, d, e = ...
-				assert(a == 1)
-				assert(b == 2)
-				assert(c == 3)
-				assert(d == 4)
-				assert(e == 5)
-				return res
+				local iscalled = false
+				local res = {}
+				function mt:construct(...)
+					iscalled = true
+					assert(rawequal(self, t), "wrong self")
+					assert(select("#", ...) == 5, "wrong number of args")
+					local a, b, c, d, e = ...
+					assert(a == 1)
+					assert(b == 2)
+					assert(c == 3)
+					assert(d == 4)
+					assert(e == 5)
+					return res
+				end
+				assert(js.new(x, 1, 2, 3, 4, 5) == res)
+				assert(iscalled)
 			end
-			assert(js.new(x, 1, 2, 3, 4, 5) == res)
-			assert(iscalled)
 			`)) !== LUA_OK) {
 				throw tojs(L, -1);
 			}
@@ -977,7 +979,7 @@ describe("fengari-interop", function() {
 			const L = new_state();
 			if (luaL_dostring(L, to_luastring(`
 			local js = require "js"
-			for _, type in ipairs{"arrow_function", "object"} do
+			for _, type in ipairs {"function", "arrow_function", "object"} do
 				local t = {}
 				local mt = {}
 				setmetatable(t, mt)
