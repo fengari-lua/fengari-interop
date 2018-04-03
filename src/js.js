@@ -794,14 +794,30 @@ let jsmt = {
 	"__pairs": function(L) {
 		let u = checkjs(L, 1);
 		let f;
-		if (typeof Symbol !== "function" || (f = u[Symbol.for("__pairs")]) === void 0)
-			luaL_argerror(L, 1, to_luastring("js object has no __pairs Symbol"));
-		let r = apply(f, u, []);
-		if (r === void 0)
-			luaL_error(L, to_luastring("bad '__pairs' result (object with keys 'iter', 'state', 'first' expected)"));
-		let iter = r.iter;
-		if (iter === void 0)
-			luaL_error(L, to_luastring("bad '__pairs' result (object.iter is missing)"));
+		let iter, state, first;
+		if (typeof Symbol !== "function" || (f = u[Symbol.for("__pairs")]) === void 0) {
+			/* By default, iterate over Object.keys */
+			iter = function(last) {
+				if (this.index >= this.keys.length)
+					return;
+				let key = this.keys[this.index++];
+				return [key, this.object[key]];
+			};
+			state = {
+				object: u,
+				keys: Object.keys(u),
+				index: 0,
+			};
+		} else {
+			let r = apply(f, u, []);
+			if (r === void 0)
+				luaL_error(L, to_luastring("bad '__pairs' result (object with keys 'iter', 'state', 'first' expected)"));
+			iter = r.iter;
+			if (iter === void 0)
+				luaL_error(L, to_luastring("bad '__pairs' result (object.iter is missing)"));
+			state = r.state;
+			first = r.first;
+		}
 		lua_pushcfunction(L, function() {
 			let state = tojs(L, 1);
 			let last = tojs(L, 2);
@@ -818,8 +834,8 @@ let jsmt = {
 			}
 			return r.length;
 		});
-		push(L, r.state);
-		push(L, r.first);
+		push(L, state);
+		push(L, first);
 		return 3;
 	},
 	"__len": function(L) {
@@ -836,25 +852,6 @@ let jsmt = {
 		return 1;
 	}
 };
-
-if (typeof Symbol === "function") {
-	/* Create __pairs for all objects that inherit from Object */
-	Object.prototype[Symbol.for("__pairs")] = function() {
-		return {
-			"iter": function(last) {
-				if (this.index >= this.keys.length)
-					return;
-				let key = this.keys[this.index++];
-				return [key, this.object[key]];
-			},
-			"state": {
-				object: this,
-				keys: Object.keys(this),
-				index: 0,
-			}
-		};
-	};
-}
 
 const luaopen_js = function(L) {
 	/* Add weak map to track objects seen */

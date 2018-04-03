@@ -657,12 +657,6 @@ describe("fengari-interop", function() {
 		}
 
 		lua_pushvalue(L, -1);
-		push(L, Object.create(null));
-		expect(lua_pcall(L, 1, 0, 0)).toBe(LUA_ERRRUN);
-		expect(tojs(L, -1)).toEqual(expect.stringContaining("js object has no __pairs Symbol"));
-		lua_pop(L, 1);
-
-		lua_pushvalue(L, -1);
 		push(L, {
 			[Symbol.for("__pairs")]: function() {}
 		});

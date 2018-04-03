@@ -171,7 +171,7 @@ Map.prototype[Symbol.for("__pairs")] = function() {
 };
 ```
 
-A default `__pairs` is attached to `Object.prototype` that uses [`Object.keys`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys).
+If there is no `__pairs` Symbol attached to an object, an iterator over [`Object.keys`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys) is returned.
 
 
 ### `__len`
