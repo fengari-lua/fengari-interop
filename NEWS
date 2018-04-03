@@ -1,4 +1,4 @@
-UNRELEASED
+0.1.1 - 2018-04-03
 
   - createproxy with function type no longer has .prototype field
   - No longer attach Symbol to built-in prototypes.
