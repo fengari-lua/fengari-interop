@@ -1,6 +1,9 @@
 UNRELEASED
 
   - createproxy with function type no longer has .prototype field
+  - No longer attach Symbol to built-in prototypes.
+  - If no __pairs Symbol is present then return iterator over Object.keys
+  - If no __len Symbol is present then return .length.
 
 
 0.1.0 - 2018-04-01
