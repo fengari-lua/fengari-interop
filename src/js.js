@@ -825,9 +825,13 @@ let jsmt = {
 	"__len": function(L) {
 		let u = checkjs(L, 1);
 		let f;
-		if (typeof Symbol !== "function" || (f = u[Symbol.for("__len")]) === void 0)
-			luaL_argerror(L, 1, to_luastring("js object has no __len Symbol"));
-		let r = apply(f, u, []);
+		let r;
+		if (typeof Symbol !== "function" || (f = u[Symbol.for("__len")]) === void 0) {
+			/* by default use .length field */
+			r = u.length;
+		} else {
+			r = apply(f, u, []);
+		}
 		push(L, r);
 		return 1;
 	}
@@ -850,32 +854,6 @@ if (typeof Symbol === "function") {
 			}
 		};
 	};
-
-	const arraylikes = [
-		Array,
-		Int8Array,
-		Uint8Array,
-		Uint8ClampedArray,
-		Int16Array,
-		Uint16Array,
-		Int32Array,
-		Uint32Array,
-		Float32Array,
-		Float64Array
-	];
-	if (typeof NodeList !== "undefined")
-		arraylikes.push(NodeList);
-	if (typeof DOMTokenList !== "undefined")
-		arraylikes.push(DOMTokenList);
-
-	/* Add __len metamethod for all Array-like objects */
-	const __len = function() {
-		return this.length;
-	};
-
-	arraylikes.forEach(function(c) {
-		c.prototype[Symbol.for("__len")] = __len;
-	});
 }
 
 const luaopen_js = function(L) {

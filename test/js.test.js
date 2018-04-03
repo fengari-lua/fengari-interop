@@ -558,12 +558,6 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("attaches __len to typed arrays", function() {
-		let a = new Uint16Array(1);
-		if (a[Symbol.for("__len")] === void 0)
-			throw Error("missing __len");
-	});
-
 	it("__len on typed arrays works", function() {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
@@ -575,14 +569,15 @@ describe("fengari-interop", function() {
 		}
 	});
 
-	it("missing __len fails", function() {
+	it("non-function __len fails", function() {
 		const L = new_state();
 		if (luaL_dostring(L, to_luastring(`
 		local js = require "js"
 		local a = js.new(js.global.Object)
+		a[js.global.Symbol["for"](nil, "__len")] = "not a function"
 		local ok, err = pcall(function() return #a end)
 		assert(not ok, "succeeded when should have failed")
-		assert(err:match("js object has no __len Symbol"), "wrong error")
+		assert(tostring(err):match("not a function"), "wrong error")
 		`)) !== LUA_OK) {
 			throw tojs(L, -1);
 		}

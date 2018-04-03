@@ -187,4 +187,4 @@ Map.prototype[Symbol.for("__len")] = function() {
 };
 ```
 
-A default `__len` is attached to `Array.prototype` and [TypedArray](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/TypedArray) prototypes that returns the `.length` field.
+If there is no `__len` Symbol attached to an object, the value of the `.length` property is returned.
