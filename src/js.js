@@ -821,7 +821,7 @@ let jsmt = {
 		lua_pushcfunction(L, function() {
 			let state = tojs(L, 1);
 			let last = tojs(L, 2);
-			let r = iter.call(state, last);
+			let r = apply(iter, state, [last]);
 			/* returning undefined indicates end of iteration */
 			if (r === void 0)
 				return 0;
