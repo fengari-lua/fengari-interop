@@ -1,3 +1,8 @@
+0.1.2 - 2018-04-23
+
+  - Use indirect eval to get reference to global environment
+
+
 0.1.1 - 2018-04-03
 
   - createproxy with function type no longer has .prototype field
