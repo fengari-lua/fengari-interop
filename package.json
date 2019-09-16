@@ -26,9 +26,9 @@
 		"test": "test"
 	},
 	"devDependencies": {
-		"eslint": "^4.19.1",
+		"eslint": "^6.4.0",
 		"fengari": "^0.1.0",
-		"jest": "^22.4.3"
+		"jest": "^24.9.0"
 	},
 	"scripts": {
 		"lint": "eslint src/ test/",
