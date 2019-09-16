@@ -1,7 +1,7 @@
 [![Build Status](https://travis-ci.org/fengari-lua/fengari-interop.svg?branch=master)](https://travis-ci.org/fengari-lua/fengari-interop)
 [![npm](https://img.shields.io/npm/v/fengari-interop.svg)](https://npmjs.com/package/fengari-interop)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![#fengari on Freenode](https://img.shields.io/Freenode/%23fengari.png)](https://webchat.freenode.net/?channels=fengari)
+[![#fengari on Freenode](https://img.shields.io/badge/Freenode-%23fengari-undefined)](https://webchat.freenode.net/?channels=fengari)
 
 
 # JS library for Fengari
