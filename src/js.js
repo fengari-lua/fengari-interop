@@ -694,11 +694,15 @@ if (typeof Proxy === "function" && typeof Symbol === "function") {
 	/*
 	We use Function() here to get prevent transpilers from converting to a
 	non-arrow function.
+	To avoid setting off strict CSP rules, we only call Function lazily.
 	Additionally, we avoid setting the internal name field by never giving the
 	new function a name in the block it was defined (and instead delete-ing
 	the configurable fields .length and .name in a wrapper function)
 	*/
-	const make_arrow_function = Function("return ()=>void 0;");
+	let make_arrow_function = function() {
+		make_arrow_function = Function("return ()=>void 0;");
+		return make_arrow_function();
+	};
 	const raw_arrow_function = function() {
 		let f = make_arrow_function();
 		delete f.length;
