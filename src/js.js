@@ -90,7 +90,6 @@ if (typeof process !== "undefined") {
 }
 
 const global_env = (function() {
-	/* global WorkerGlobalScope */ /* see https://github.com/sindresorhus/globals/issues/127 */
 	if (typeof process !== "undefined") {
 		/* node */
 		return global;
