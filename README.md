@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/fengari-lua/fengari-interop.svg?branch=master)](https://travis-ci.org/fengari-lua/fengari-interop)
+[![Build Status](https://github.com/fengari-lua/fengari-interop/actions/workflows/ci.yaml/badge.svg)](https://github.com/fengari-lua/fengari-interop/actions/workflows/ci.yaml?query=event%3Apush)
 [![npm](https://img.shields.io/npm/v/fengari-interop.svg)](https://npmjs.com/package/fengari-interop)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![#fengari on libera.chat](https://img.shields.io/badge/chat-%23fengari-brightgreen)](https://web.libera.chat/?channels=#fengari)
