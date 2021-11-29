@@ -1,6 +1,6 @@
 {
 	"name": "fengari-interop",
-	"version": "0.1.2",
+	"version": "0.1.3",
 	"description": "JS library for Fengari",
 	"author": "Daurnimator <quae@daurnimator.com>",
 	"repository": {
