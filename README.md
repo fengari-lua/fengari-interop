@@ -28,7 +28,7 @@ A userdata representing JavaScript [`null`](https://developer.mozilla.org/en-US/
 
 ### `global`
 
-A reference to the JavaScript global context. In the browser, this is usually equivalent to the `window` object. In node.js it's equal to [`global`](https://nodejs.org/api/globals.html#globals_global).
+A reference to the JavaScript global context, usually `globalThis`. In the browser, this is usually equivalent to the `window` object. In node.js it's equal to [`global`](https://nodejs.org/api/globals.html#globals_global).
 
 
 ### `new(constructor, ...)`
