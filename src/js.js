@@ -230,6 +230,9 @@ const atnativeerror = function(L) {
 	return 1;
 };
 
+// TODO GC this object
+const wrapped_proxies = {}
+
 const tojs = function(L, idx) {
 	switch(lua_type(L, idx)) {
 		case LUA_TNONE:
@@ -253,8 +256,17 @@ const tojs = function(L, idx) {
 		case LUA_TFUNCTION:
 		case LUA_TTHREAD:
 		/* fall through */
-		default:
-			return wrap(L, lua_toproxy(L, idx));
+		default: {
+			// TODO this feels like an inefficent way to marshal the address of idx
+			const p = lua_toproxy(L, idx)
+			const str = tostring(L, p);
+
+			if (!wrapped_proxies[str]) {
+				wrapped_proxies[str] = wrap(L, p);
+			} 
+
+			return wrapped_proxies[str]
+		}
 	}
 };
 
