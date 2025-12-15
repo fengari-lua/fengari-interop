@@ -91,7 +91,7 @@ if (typeof process !== "undefined") {
 
 const global_env = (function(Object) {
 	return typeof globalThis === 'object' ?
-		globalThis // eslint-disable-line no-undef
+		globalThis
 		: (this ?
 			// compat: strict mode is unsupported
 			this
