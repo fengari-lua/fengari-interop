@@ -86,12 +86,12 @@ let custom_inspect_symbol;
 if (typeof process !== "undefined") {
 	try { /* for node.js */
 		custom_inspect_symbol = require('util').inspect.custom;
-	} catch (e) {}
+	} catch {}
 }
 
 const global_env = (function(Object) {
 	return typeof globalThis === 'object' ?
-		globalThis // eslint-disable-line no-undef
+		globalThis
 		: (this ?
 			// compat: strict mode is unsupported
 			this
