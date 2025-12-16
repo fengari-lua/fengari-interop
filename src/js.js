@@ -86,7 +86,7 @@ let custom_inspect_symbol;
 if (typeof process !== "undefined") {
 	try { /* for node.js */
 		custom_inspect_symbol = require('util').inspect.custom;
-	} catch {}
+	} catch (e) {}
 }
 
 const global_env = (function(Object) {
